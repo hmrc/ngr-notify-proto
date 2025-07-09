@@ -2,7 +2,7 @@
 
 !.gitignore
 !.scalafmt.conf
-bina
+bin
 .bloop/
 .cache
 /.classpath
