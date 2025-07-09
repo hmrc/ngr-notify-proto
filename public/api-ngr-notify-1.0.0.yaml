@@ -1,0 +1,237 @@
+openapi: 3.0.3
+info:
+  title: 'NGR Notify API'
+  description: >-
+    This API is intended for use by NGR services to facilitate the sending of email notifications. 
+    <br><br>
+  version: 1.0.0
+servers:
+  - url: 'http://localhost:1505'
+    description: >-
+      Actual environment values can be obtained from MDTP configuration for each environment
+tags:
+  - name: 'NGR-notify'
+    description: >-
+      This API is intended for use by NGR services to facilitate the sending of email notifications.
+paths:
+  '/ngr-notify-proto/sendEmail/{emailTemplateId}':
+    post:
+      summary: 'NGR Notify API - Send email'
+      description: >
+        Send email notification
+      tags:
+        - 'NGR-notify'
+      parameters:
+        - in: path
+          name: emailTemplateId
+          required: true
+          schema:
+            type: string
+            enum:
+              - ngr_registration_successful
+              - ngr_property_request_sent
+          description: The email template ID
+      requestBody:
+        required: true
+        description: Request body
+        content:
+          application/json;charset=UTF-8:
+            schema:
+              $ref: '#/components/schemas/request'
+            examples:
+              Example1:
+                summary: Send Email Example 1
+                value:
+                  user:
+                    firstName: "David"
+                    lastName: "Jones"
+                    email: "test@email.com"
+                  reference: AP123456789
+                  postcode: AA1 11A
+              Example2:
+                summary: Send Email Example 2
+                value:
+                  fullName: "Joe Noggins"
+                  email: "test@email.com"
+                  reference: SP12345
+      responses:
+        '201':
+          description: Email dispatch task successfully created.
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/successResponse'
+              examples:
+                Example1:
+                  summary: Successful Response Example
+                  value:
+                    status: "Success"
+                    message: "Email dispatch task successfully created."
+        '400':
+          description: |-
+            Bad Request
+            ```
+            "code"                        "reason"
+            EMAIL_TEMPLATE_NOT_FOUND      Wrong email template id is used
+            MISSED_PARAMETER              Submission has not passed validation - missed parameter.
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/failureResponse'
+              examples:
+                Example1_SingleCode:
+                  summary: Single Error Code
+                  value:
+                    failures:
+                      - code: EMAIL_TEMPLATE_NOT_FOUND
+                        reason: Wrong email template id is used.
+                Example2_MultipleErrorCodes:
+                  summary: Multiple Error Codes
+                  value:
+                    failures:
+                      - code: EMAIL_TEMPLATE_NOT_FOUND
+                        reason: Wrong email template id is used.
+                      - code: MISSED_PARAMETER
+                        reason: >-
+                          Submission has not passed validation. Missed parameter email.
+        '404':
+          description: |-
+            Not Found
+            ```
+            "code"                        "reason"
+            NOT_FOUND                     The remote endpoint has indicated that the requested resource could not be found..
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/failureResponse'
+              examples:
+                Example-Not_Found:
+                  value:
+                    failures:
+                      - code: NOT_FOUND
+                        reason: The remote endpoint has indicated that the requested resource could not be found.
+        '422':
+          description: |-
+            Unprocessable Entity
+            ```
+            "code"                        "reason"
+            INVALID_REQUEST               The remote endpoint has indicated that the request is invalid.
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/failureResponse'
+              examples:
+                Example-Invalid_Request:
+                  value:
+                    failures:
+                      - code: INVALID_REQUEST
+                        reason: The remote endpoint has indicated that the request is invalid.
+        '500':
+          description: |-
+            Server Error
+            ```
+             "code"         "reason"
+             SERVER_ERROR   Service is currently experiencing problems that require live service intervention.
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/failureResponse'
+              examples:
+                Server Error:
+                  value:
+                    failures:
+                      - code: SERVER_ERROR 
+                        reason: Service is currently experiencing problems that require live service intervention.
+        '503':
+          description: |-
+            Service Unavailable
+            ```
+            "code"                "reason"
+            SERVICE_UNAVAILABLE   Dependent systems are currently not responding.
+          content:
+            application/json;charset=UTF-8:
+              schema:
+                $ref: '#/components/schemas/failureResponse'
+              examples:
+                Example-Service_Unavailable:
+                  value:
+                    failures:
+                      - code: SERVICE_UNAVAILABLE
+                        reason: Dependent systems are currently not responding.
+components:
+  schemas:
+    request:
+      title: Send Email Request Schema
+      type: object
+      additionalProperties:
+        type: string
+        example:
+          reference: AP123456789
+          postcode: AA1 1AA
+      properties:
+        user:
+          type: object
+          additionalProperties: false
+          properties:
+            firstName:
+              minLength: 1
+              maxLength: 100
+              type: string
+              description: First name
+            lastName:
+              minLength: 1
+              maxLength: 100
+              type: string
+              description: Last name
+            email:
+              minLength: 5
+              maxLength: 150
+              format: email
+              type: string
+    failureResponse:
+      title: 'Send Email Error Response Schema'
+      type: object
+      required:
+        - failures
+      additionalProperties: false
+      properties:
+        failures:
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: object
+            additionalProperties: false
+            required:
+              - code
+              - reason
+            properties:
+              code:
+                description: Keys for all the errors returned
+                type: string
+                pattern: '^[A-Z0-9_-]{1,160}$'
+              reason:
+                description: A simple description for the failure
+                type: string
+                minLength: 1
+                maxLength: 160
+    successResponse:
+      title: 'Send Email Successful Response Schema'
+      type: object
+      required:
+        - status
+        - message
+      additionalProperties: false
+      properties:
+        status:
+          minLength: 0
+          maxLength: 50         
+          type: string
+          description: The response status
+          example: Success
+        message:
+          minLength: 0
+          maxLength: 100
+          type: string
+          description: The response message
+          example: Email dispatch task successfully created.

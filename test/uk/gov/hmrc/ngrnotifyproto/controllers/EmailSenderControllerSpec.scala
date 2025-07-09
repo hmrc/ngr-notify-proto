@@ -16,16 +16,20 @@
 
 package uk.gov.hmrc.ngrnotifyproto.controllers
 
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpec
+import play.api.http.Status.CREATED
+import play.api.test.Helpers._
+import play.api.test.{FakeRequest, Helpers}
 
-@Singleton()
-class MicroserviceHelloWorldController @Inject()(cc: ControllerComponents)
-    extends BackendController(cc) {
+class EmailSenderControllerSpec extends AnyWordSpec with Matchers:
 
-  def hello(): Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok("Hello world"))
+  private val fakeRequest = FakeRequest("POST", "/")
+  private val controller  = new EmailSenderController(Helpers.stubControllerComponents())
+
+  "EmailSenderController" should {
+    "return 201" in {
+      val result = controller.sendEmail("")(fakeRequest)
+      status(result) shouldBe CREATED
+    }
   }
-}

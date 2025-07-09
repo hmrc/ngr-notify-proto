@@ -1,3 +1,4 @@
 # microservice specific routes
 
-GET        /hello-world             uk.gov.hmrc.ngrnotifyproto.controllers.MicroserviceHelloWorldController.hello
+# Send email
+POST    /sendEmail/:emailTemplateId             uk.gov.hmrc.ngrnotifyproto.controllers.EmailSenderController.sendEmail(emailTemplateId)

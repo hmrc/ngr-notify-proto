@@ -14,12 +14,25 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ngrnotifyproto.config
+package uk.gov.hmrc.ngrnotifyproto.controllers
+
+import play.api.Logging
+import play.api.mvc.{Action, AnyContent, ControllerComponents}
+import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import scala.concurrent.Future
 
+/**
+  * @author Yuriy Tumakha
+  */
 @Singleton
-class AppConfig @Inject() (config: Configuration):
+class EmailSenderController @Inject() (cc: ControllerComponents) extends BackendController(cc) with Logging:
 
-  val appName: String = config.get[String]("appName")
+  def sendEmail(emailTemplateId: String): Action[AnyContent] = Action.async { implicit request =>
+    logger.info(s"Send $emailTemplateId")
+
+    Future.successful(
+      Created(""""Email dispatch task successfully created."""")
+    )
+  }
