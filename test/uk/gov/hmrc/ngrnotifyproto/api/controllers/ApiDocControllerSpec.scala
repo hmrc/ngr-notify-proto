@@ -14,27 +14,26 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ngrnotifyproto.controllers
+package uk.gov.hmrc.ngrnotifyproto.api.controllers
 
-import org.apache.pekko.stream.Materializer
-import org.apache.pekko.stream.testkit.NoMaterializer
+import org.scalatest.OptionValues
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.test.Helpers.*
-import play.api.test.{FakeRequest, Helpers}
+import play.api.test.{DefaultAwaitTimeout, FakeRequest, Helpers}
 
-class EmailSenderControllerSpec extends AnyWordSpec with Matchers:
+/**
+  * @author Yuriy Tumakha
+  */
+class ApiDocControllerSpec extends AnyWordSpec with Matchers with DefaultAwaitTimeout with OptionValues:
 
-  private val controller = new EmailSenderController(Helpers.stubControllerComponents())
+  private val fakeRequest = FakeRequest("GET", "/")
+  private val controller  = new ApiDocController(Helpers.stubControllerComponents())
 
-  given Materializer = NoMaterializer
-
-  "EmailSenderController" should {
-    "return 400" in {
-      val fakeRequest = FakeRequest("POST", "/")
-        .withHeaders("Content-type" -> "application/json;charset=UTF-8")
-
-      val result = controller.sendEmail("ngr_registration_successful")(fakeRequest)
-      status(result) shouldBe BAD_REQUEST
+  "GET /" should {
+    "return 303" in {
+      val result = controller.apiSwaggerUI(fakeRequest)
+      status(result)                 shouldBe SEE_OTHER
+      redirectLocation(result).value shouldBe "/assets/lib/swagger-ui/api.html"
     }
   }

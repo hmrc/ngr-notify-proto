@@ -29,7 +29,8 @@ paths:
             type: string
             enum:
               - ngr_registration_successful
-              - ngr_property_request_sent
+              - ngr_registration_operator_notification
+              - ngr_add_property_request_sent
           description: The email template ID
       requestBody:
         required: true
@@ -37,23 +38,32 @@ paths:
         content:
           application/json;charset=UTF-8:
             schema:
-              $ref: '#/components/schemas/request'
+              oneOf:
+                - $ref: "#/components/schemas/RegistrationSuccessful"
+                - $ref: "#/components/schemas/RegistrationOperatorNotification"
+                - $ref: "#/components/schemas/AddPropertyRequestSent"
             examples:
               Example1:
-                summary: Send Email Example 1
+                summary: Example 1 - RegistrationSuccessful
                 value:
                   user:
                     firstName: "David"
                     lastName: "Jones"
                     email: "test@email.com"
-                  reference: AP123456789
-                  postcode: AA1 11A
+                  reference: REG12345
               Example2:
-                summary: Send Email Example 2
+                summary: Example 2 - RegistrationOperatorNotification
                 value:
-                  fullName: "Joe Noggins"
-                  email: "test@email.com"
-                  reference: SP12345
+                  reference: REG12345
+              Example3:
+                summary: Example 3 - AddPropertyRequestSent
+                value:
+                  user:
+                    firstName: "Joe"
+                    lastName: "Noggins"
+                    email: "test@email.com"
+                  reference: AP123456789
+                  postcodeFirstPart: AA1
       responses:
         '201':
           description: Email dispatch task successfully created.
@@ -140,7 +150,7 @@ paths:
                 Server Error:
                   value:
                     failures:
-                      - code: SERVER_ERROR 
+                      - code: SERVER_ERROR
                         reason: Service is currently experiencing problems that require live service intervention.
         '503':
           description: |-
@@ -160,34 +170,65 @@ paths:
                         reason: Dependent systems are currently not responding.
 components:
   schemas:
-    request:
-      title: Send Email Request Schema
+    RegistrationSuccessful:
+      title: RegistrationSuccessful Request Schema
       type: object
-      additionalProperties:
-        type: string
-        example:
-          reference: AP123456789
-          postcode: AA1 1AA
+      additionalProperties: false
       properties:
         user:
-          type: object
-          additionalProperties: false
-          properties:
-            firstName:
-              minLength: 1
-              maxLength: 100
-              type: string
-              description: First name
-            lastName:
-              minLength: 1
-              maxLength: 100
-              type: string
-              description: Last name
-            email:
-              minLength: 5
-              maxLength: 150
-              format: email
-              type: string
+          $ref: '#/components/schemas/User'
+        reference:
+          minLength: 1
+          maxLength: 100
+          type: string
+          description: Reference
+    AddPropertyRequestSent:
+      title: AddPropertyRequestSent Request Schema
+      type: object
+      additionalProperties: false
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        reference:
+          minLength: 1
+          maxLength: 100
+          type: string
+          description: Reference
+        postcodeFirstPart:
+          minLength: 1
+          maxLength: 5
+          type: string
+          description: Postcode first part
+    RegistrationOperatorNotification:
+      title: RegistrationOperatorNotification Request Schema
+      type: object
+      additionalProperties: false
+      properties:
+        reference:
+          minLength: 1
+          maxLength: 100
+          type: string
+          description: Reference
+    User:
+      title: User Schema
+      type: object
+      additionalProperties: false
+      properties:
+        firstName:
+          minLength: 1
+          maxLength: 100
+          type: string
+          description: First name
+        lastName:
+          minLength: 1
+          maxLength: 100
+          type: string
+          description: Last name
+        email:
+          minLength: 5
+          maxLength: 150
+          format: email
+          type: string
     failureResponse:
       title: 'Send Email Error Response Schema'
       type: object
@@ -225,7 +266,7 @@ components:
       properties:
         status:
           minLength: 0
-          maxLength: 50         
+          maxLength: 50
           type: string
           description: The response status
           example: Success
