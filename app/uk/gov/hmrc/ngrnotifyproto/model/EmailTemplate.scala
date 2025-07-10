@@ -14,12 +14,18 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ngrnotifyproto.config
+package uk.gov.hmrc.ngrnotifyproto.model
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import play.api.libs.json.Format
 
-@Singleton
-class AppConfig @Inject() (config: Configuration):
+/**
+  * @author Yuriy Tumakha
+  */
+enum EmailTemplate:
+  case ngr_registration_successful,
+    ngr_registration_operator_notification, // VOA operator notification
+    ngr_add_property_request_sent
+end EmailTemplate
 
-  val appName: String = config.get[String]("appName")
+object EmailTemplate:
+  implicit val format: Format[EmailTemplate] = Scala3EnumJsonFormat.format

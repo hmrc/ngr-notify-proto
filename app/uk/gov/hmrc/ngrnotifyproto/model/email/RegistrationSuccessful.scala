@@ -14,18 +14,22 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ngrnotifyproto.controllers
+package uk.gov.hmrc.ngrnotifyproto.model.email
 
-import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
-import play.api.mvc.{Action, AnyContent, ControllerComponents}
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import play.api.libs.json.{JsObject, Json, OFormat}
+import uk.gov.hmrc.ngrnotifyproto.model.{User, UserNotification}
 
-@Singleton()
-class MicroserviceHelloWorldController @Inject()(cc: ControllerComponents)
-    extends BackendController(cc) {
+/**
+  * @author Yuriy Tumakha
+  */
+case class RegistrationSuccessful(user: User, reference: String) extends UserNotification:
 
-  def hello(): Action[AnyContent] = Action.async { implicit request =>
-    Future.successful(Ok("Hello world"))
-  }
-}
+  def toParams: JsObject =
+    Json.obj(
+      "firstName" -> user.firstName,
+      "lastName"  -> user.lastName,
+      "reference" -> reference
+    )
+
+object RegistrationSuccessful:
+  implicit val format: OFormat[RegistrationSuccessful] = Json.format[RegistrationSuccessful]

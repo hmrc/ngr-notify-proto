@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ngrnotifyproto.config
+package uk.gov.hmrc.ngrnotifyproto.model
 
-import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import play.api.libs.json.JsObject
 
-@Singleton
-class AppConfig @Inject() (config: Configuration):
+/**
+  * @author Yuriy Tumakha
+  */
+trait OperatorNotification:
 
-  val appName: String = config.get[String]("appName")
+  def toParams: JsObject

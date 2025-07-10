@@ -17,7 +17,6 @@ eclipse
 .idea_modules
 /.idea_modules
 *.iml
-lib
 lib_managed
 log
 logs

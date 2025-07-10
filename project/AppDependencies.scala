@@ -1,22 +1,21 @@
-import play.core.PlayVersion
-import play.sbt.PlayImport._
-import sbt.Keys.libraryDependencies
-import sbt._
+import sbt.*
 
 object AppDependencies {
 
-  private val bootstrapVersion = "9.13.0"
+  private val bootstrapVersion = "9.14.0"
   private val hmrcMongoVersion = "2.6.0"
 
-  val compile = Seq(
-    "uk.gov.hmrc"             %% "bootstrap-backend-play-30"  % bootstrapVersion,
-    "uk.gov.hmrc.mongo"       %% "hmrc-mongo-play-30"         % hmrcMongoVersion
+  val compile: Seq[ModuleID] = Seq(
+    "uk.gov.hmrc"       %% "bootstrap-backend-play-30" % bootstrapVersion,
+    "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
+    "org.webjars"        % "swagger-ui"                % "5.25.3"
   )
 
-  val test = Seq(
-    "uk.gov.hmrc"             %% "bootstrap-test-play-30"     % bootstrapVersion            % Test,
-    "uk.gov.hmrc.mongo"       %% "hmrc-mongo-test-play-30"    % hmrcMongoVersion            % Test,
+  val test: Seq[ModuleID] = Seq(
+    "uk.gov.hmrc"       %% "bootstrap-test-play-30"  % bootstrapVersion % Test,
+    "uk.gov.hmrc.mongo" %% "hmrc-mongo-test-play-30" % hmrcMongoVersion % Test
   )
 
-  val it = Seq.empty
+  val it: Seq[ModuleID] = Seq.empty
+
 }
