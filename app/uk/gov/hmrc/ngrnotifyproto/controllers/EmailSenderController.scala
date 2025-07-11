@@ -19,14 +19,15 @@ package uk.gov.hmrc.ngrnotifyproto.controllers
 import play.api.Logging
 import play.api.libs.json.*
 import play.api.mvc.{Action, ControllerComponents, Request, Result}
-import uk.gov.hmrc.http.BadRequestException
 import uk.gov.hmrc.ngrnotifyproto.model.EmailTemplate.*
 import uk.gov.hmrc.ngrnotifyproto.model.email.*
+import uk.gov.hmrc.ngrnotifyproto.model.response.{ApiFailure, ApiSuccess}
 import uk.gov.hmrc.ngrnotifyproto.model.{EmailTemplate, OperatorNotification, UserNotification}
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
 import scala.collection.Seq
+import scala.collection.immutable.ArraySeq
 import scala.concurrent.Future
 
 /**
@@ -38,31 +39,54 @@ class EmailSenderController @Inject() (cc: ControllerComponents) extends Backend
   private val operatorEmail = "operator@email.com" // TODO: get from config
 
   def sendEmail(emailTemplateId: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    EmailTemplate.valueOf(emailTemplateId) match {
-      case `ngr_registration_successful`            =>
-        sendEmail(ngr_registration_successful, parse[RegistrationSuccessful])
-      case `ngr_registration_operator_notification` =>
-        sendEmail(ngr_registration_operator_notification, parse[RegistrationOperatorNotification])
-      case `ngr_add_property_request_sent`          =>
-        sendEmail(ngr_add_property_request_sent, parse[AddPropertyRequestSent])
+    val emailTemplate = EmailTemplate.valueOf(emailTemplateId)
+
+    emailTemplate match {
+      case `ngr_registration_successful`            => parse[RegistrationSuccessful]
+      case `ngr_registration_operator_notification` => parse[RegistrationOperatorNotification]
+      case `ngr_add_property_request_sent`          => parse[AddPropertyRequestSent]
+    } match {
+      case Right((email, params)) => sendEmail(emailTemplate, email, params)
+      case Left(result)           => Future.successful(result)
     }
   }
 
-  private def parse[T](using request: Request[JsValue], rds: Reads[T]): T =
+  private def parse[T](using
+    request: Request[JsValue],
+    rds: Reads[T],
+    tjs: OWrites[T]
+  ): Either[Result, (String, JsObject)] =
     request.body.validate[T] match {
-      case JsSuccess(v: T, _)                                       => v
-      case JsError(errors: Seq[(JsPath, Seq[JsonValidationError])]) => throw new BadRequestException(errors.toString)
+      case JsSuccess(notification: T, _)                            =>
+        val email          = notification match {
+          case userNotification: UserNotification => userNotification.email
+          case _: OperatorNotification            => operatorEmail
+        }
+        val templateParams = Json.toJsObject[T](notification)
+
+        Right(email -> templateParams)
+      case JsError(errors: Seq[(JsPath, Seq[JsonValidationError])]) =>
+        val failures = errors.map { case (jsPath, jsonErrors) =>
+          ApiFailure(
+            "JSON_VALIDATION_ERROR",
+            s"$jsPath <- ${jsonErrors.map(printValidationError).mkString(" | ")}"
+          )
+        }
+        Left(BadRequest(Json.toJson(failures)))
     }
 
-  private def sendEmail(emailTemplate: EmailTemplate, userNotification: UserNotification): Future[Result] =
-    sendEmail(emailTemplate, userNotification.user.email, userNotification.toParams)
+  private def printValidationError(error: JsonValidationError): String =
+    val msgArgs = error.args match {
+      case arraySeq: ArraySeq[?] => arraySeq.mkString(", ")
+      case any                   => any.toString
+    }
+    error.message + msgArgs
 
-  private def sendEmail(emailTemplate: EmailTemplate, operatorNotification: OperatorNotification): Future[Result] =
-    sendEmail(emailTemplate, operatorEmail, operatorNotification.toParams)
+  private def sendEmail[T](emailTemplate: EmailTemplate, email: String, templateParams: JsObject): Future[Result] =
+    logger.info(s"\nSend $emailTemplate to $email. Template params: $templateParams")
 
-  private def sendEmail(emailTemplate: EmailTemplate, email: String, parametersJson: JsObject): Future[Result] =
-    logger.info(s"Send $emailTemplate to $email. Template params: $parametersJson")
+    // TODO: Schedule sending email
 
     Future.successful(
-      Created(""""Email dispatch task successfully created."""")
+      Created(Json.toJsObject(ApiSuccess("Success", "Email dispatch task successfully created.")))
     )

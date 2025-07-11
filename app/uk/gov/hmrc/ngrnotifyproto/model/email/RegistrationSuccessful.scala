@@ -17,19 +17,13 @@
 package uk.gov.hmrc.ngrnotifyproto.model.email
 
 import play.api.libs.json.{JsObject, Json, OFormat}
-import uk.gov.hmrc.ngrnotifyproto.model.{User, UserNotification}
+import uk.gov.hmrc.ngrnotifyproto.model.UserNotification
 
 /**
   * @author Yuriy Tumakha
   */
-case class RegistrationSuccessful(user: User, reference: String) extends UserNotification:
-
-  def toParams: JsObject =
-    Json.obj(
-      "firstName" -> user.firstName,
-      "lastName"  -> user.lastName,
-      "reference" -> reference
-    )
+case class RegistrationSuccessful(firstName: String, lastName: String, email: String, reference: String)
+    extends UserNotification
 
 object RegistrationSuccessful:
   implicit val format: OFormat[RegistrationSuccessful] = Json.format[RegistrationSuccessful]

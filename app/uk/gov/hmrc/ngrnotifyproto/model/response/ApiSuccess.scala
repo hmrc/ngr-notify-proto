@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ngrnotifyproto.model.email
+package uk.gov.hmrc.ngrnotifyproto.model.response
 
-import play.api.libs.json.{JsObject, Json, OFormat}
-import uk.gov.hmrc.ngrnotifyproto.model.OperatorNotification
+import play.api.libs.json.{Json, OFormat}
 
 /**
   * @author Yuriy Tumakha
   */
-case class RegistrationOperatorNotification(reference: String) extends OperatorNotification
+case class ApiSuccess(status: String, message: String)
 
-object RegistrationOperatorNotification:
-  implicit val format: OFormat[RegistrationOperatorNotification] = Json.format[RegistrationOperatorNotification]
+object ApiSuccess:
+  implicit val format: OFormat[ApiSuccess] = Json.format[ApiSuccess]
