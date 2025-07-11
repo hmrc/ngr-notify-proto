@@ -4,7 +4,7 @@
 ### Run locally:
 * `cd` to the root of the project.
 * `sbt run`
-
+* Navigate to http://localhost:1505
 
 ### License
 
