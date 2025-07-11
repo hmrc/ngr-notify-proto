@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ngrnotifyproto.model
+package uk.gov.hmrc.ngrnotifyproto.model.response
 
 import play.api.libs.json.{Json, OFormat}
 
 /**
   * @author Yuriy Tumakha
   */
-case class User(firstName: String, lastName: String, email: String)
+case class ApiFailure(code: String, reason: String)
 
-object User:
-  implicit val format: OFormat[User] = Json.format[User]
+object ApiFailure:
+  implicit val format: OFormat[ApiFailure] = Json.format[ApiFailure]

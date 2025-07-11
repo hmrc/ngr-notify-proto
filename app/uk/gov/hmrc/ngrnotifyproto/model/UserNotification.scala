@@ -16,13 +16,11 @@
 
 package uk.gov.hmrc.ngrnotifyproto.model
 
-import play.api.libs.json.JsObject
-
 /**
   * @author Yuriy Tumakha
   */
 trait UserNotification:
 
-  val user: User
-
-  def toParams: JsObject
+  val firstName: String
+  val lastName: String
+  val email: String
