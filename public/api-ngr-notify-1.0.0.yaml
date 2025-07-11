@@ -173,6 +173,9 @@ components:
     RegistrationSuccessful:
       title: RegistrationSuccessful Request Schema
       type: object
+      required:
+        - user
+        - reference
       additionalProperties: false
       properties:
         user:
@@ -185,6 +188,10 @@ components:
     AddPropertyRequestSent:
       title: AddPropertyRequestSent Request Schema
       type: object
+      required:
+        - user
+        - reference
+        - postcodeFirstPart
       additionalProperties: false
       properties:
         user:
@@ -202,6 +209,8 @@ components:
     RegistrationOperatorNotification:
       title: RegistrationOperatorNotification Request Schema
       type: object
+      required:
+        - reference
       additionalProperties: false
       properties:
         reference:
@@ -212,6 +221,10 @@ components:
     User:
       title: User Schema
       type: object
+      required:
+        - firstName
+        - lastName
+        - email
       additionalProperties: false
       properties:
         firstName:
