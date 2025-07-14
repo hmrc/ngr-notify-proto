@@ -31,12 +31,13 @@ import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
 import uk.gov.hmrc.ngrnotifyproto.repository.EmailNotificationRepo.saveForDays
 
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * @author Yuriy Tumakha
   */
+@Singleton
 class EmailNotificationRepo @Inject() (mongo: MongoComponent)(using
   ec: ExecutionContext
 ) extends PlayMongoRepository[EmailNotification](
