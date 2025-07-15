@@ -168,7 +168,14 @@ components:
     request:
       title: Send Email Request Schema
       type: object
-      additionalProperties: true
+      properties:
+        callbackUrl:
+          minLength: 1
+          maxLength: 255
+          format: uri
+          type: string
+      additionalProperties:
+        type: string
       example:
         firstName: "Joe"
         lastName: "Noggins"
