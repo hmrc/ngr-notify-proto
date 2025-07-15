@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.ngrnotifyproto.model.db
 
-import org.bson.types.ObjectId
 import org.mongodb.scala.bson.ObjectId
 import play.api.libs.json.{JsObject, Json, OFormat}
 import uk.gov.hmrc.ngrnotifyproto.model.EmailTemplate
