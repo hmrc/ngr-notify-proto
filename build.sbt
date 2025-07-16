@@ -1,7 +1,7 @@
 import uk.gov.hmrc.DefaultBuildSettings
 
 val appName     = "ngr-notify-proto"
-val defaultPort = 1505
+val defaultPort = 1515
 
 ThisBuild / majorVersion := 0
 ThisBuild / scalaVersion := "3.7.1"

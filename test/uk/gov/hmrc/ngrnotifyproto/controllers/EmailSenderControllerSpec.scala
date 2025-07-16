@@ -20,12 +20,14 @@ import org.apache.pekko.stream.Materializer
 import org.apache.pekko.stream.testkit.NoMaterializer
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
+import org.scalatestplus.play.guice.GuiceOneAppPerSuite
 import play.api.test.Helpers.*
-import play.api.test.{FakeRequest, Helpers}
+import play.api.test.{FakeRequest, Helpers, Injecting}
+import uk.gov.hmrc.ngrnotifyproto.model.EmailTemplate.ngr_registration_successful
 
-class EmailSenderControllerSpec extends AnyWordSpec with Matchers:
+class EmailSenderControllerSpec extends AnyWordSpec with Matchers with GuiceOneAppPerSuite with Injecting:
 
-  private val controller = new EmailSenderController(Helpers.stubControllerComponents())
+  private val controller = inject[EmailSenderController]
 
   given Materializer = NoMaterializer
 
@@ -34,7 +36,7 @@ class EmailSenderControllerSpec extends AnyWordSpec with Matchers:
       val fakeRequest = FakeRequest("POST", "/")
         .withHeaders("Content-type" -> "application/json;charset=UTF-8")
 
-      val result = controller.sendEmail("ngr_registration_successful")(fakeRequest)
+      val result = controller.sendEmail(ngr_registration_successful.toString)(fakeRequest)
       status(result) shouldBe BAD_REQUEST
     }
   }

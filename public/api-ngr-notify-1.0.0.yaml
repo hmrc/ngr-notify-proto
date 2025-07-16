@@ -6,7 +6,7 @@ info:
     <br><br>
   version: 1.0.0
 servers:
-  - url: 'http://localhost:1505'
+  - url: 'http://localhost:1515'
     description: >-
       Actual environment values can be obtained from MDTP configuration for each environment
 tags:
@@ -168,7 +168,14 @@ components:
     request:
       title: Send Email Request Schema
       type: object
-      additionalProperties: true
+      properties:
+        callbackUrl:
+          minLength: 1
+          maxLength: 255
+          format: uri
+          type: string
+      additionalProperties:
+        type: string
       example:
         firstName: "Joe"
         lastName: "Noggins"

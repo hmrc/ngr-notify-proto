@@ -16,27 +16,35 @@
 
 package uk.gov.hmrc.ngrnotifyproto.controllers
 
-import play.api.Logging
+import play.api.{Configuration, Logging}
 import play.api.libs.json.*
 import play.api.mvc.{Action, ControllerComponents, Request, Result}
 import uk.gov.hmrc.ngrnotifyproto.model.EmailTemplate.*
 import uk.gov.hmrc.ngrnotifyproto.model.email.*
 import uk.gov.hmrc.ngrnotifyproto.model.response.{ApiFailure, ApiSuccess}
 import uk.gov.hmrc.ngrnotifyproto.model.{EmailTemplate, OperatorNotification, UserNotification}
+import uk.gov.hmrc.ngrnotifyproto.repository.EmailNotificationRepo
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
 import javax.inject.{Inject, Singleton}
 import scala.collection.Seq
 import scala.collection.immutable.ArraySeq
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * @author Yuriy Tumakha
   */
 @Singleton
-class EmailSenderController @Inject() (cc: ControllerComponents) extends BackendController(cc) with Logging:
+class EmailSenderController @Inject() (
+  configuration: Configuration,
+  emailNotificationRepo: EmailNotificationRepo,
+  cc: ControllerComponents
+)(using
+  ec: ExecutionContext
+) extends BackendController(cc)
+    with Logging:
 
-  private val operatorEmail = "operator@email.com" // TODO: get from config
+  private val operatorEmail = configuration.get[String]("operator.email")
 
   def sendEmail(emailTemplateId: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     val emailTemplate = EmailTemplate.valueOf(emailTemplateId)
@@ -85,8 +93,17 @@ class EmailSenderController @Inject() (cc: ControllerComponents) extends Backend
   private def sendEmail[T](emailTemplate: EmailTemplate, email: String, templateParams: JsObject): Future[Result] =
     logger.info(s"\nSend $emailTemplate to $email. Template params: $templateParams")
 
-    // TODO: Schedule sending email
-
-    Future.successful(
-      Created(Json.toJsObject(ApiSuccess("Success", "Email dispatch task successfully created.")))
-    )
+    emailNotificationRepo
+      .save(emailTemplate, email, templateParams)
+      .map { id =>
+        logger.info(s"\nSaved email notification with ID = $id")
+        Created(Json.toJsObject(ApiSuccess("Success", "Email dispatch task successfully created.")))
+      }
+      .recover { error =>
+        logger.error("Error on save to Mongo", error)
+        InternalServerError(
+          Json.toJson(
+            Seq(ApiFailure("MONGO_DB_ERROR", error.getMessage))
+          )
+        )
+      }
