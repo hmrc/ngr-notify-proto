@@ -23,7 +23,6 @@ import play.api.libs.json.Format
   */
 enum EmailTemplate:
   case ngr_registration_successful,
-    ngr_registration_operator_notification, // VOA operator notification
     ngr_add_property_request_sent
 end EmailTemplate
 

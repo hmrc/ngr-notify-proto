@@ -21,14 +21,17 @@ import play.api.libs.json.{JsObject, Json, OFormat}
 import uk.gov.hmrc.ngrnotifyproto.model.EmailTemplate
 
 import java.time.Instant
+import java.util.UUID
 
 /**
   * @author Yuriy Tumakha
   */
 case class EmailNotification(
   emailTemplateId: EmailTemplate,
-  email: String,
+  trackerId: UUID,
+  sendToEmails: Seq[String],
   templateParams: JsObject,
+  callbackUrl: Option[String],
   _id: ObjectId = new ObjectId,
   createdAt: Instant = Instant.now
 )

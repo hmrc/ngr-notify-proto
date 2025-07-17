@@ -29,7 +29,6 @@ paths:
             type: string
             enum:
               - ngr_registration_successful
-              - ngr_registration_operator_notification
               - ngr_add_property_request_sent
           description: The email template ID
       requestBody:
@@ -43,22 +42,26 @@ paths:
               Example1:
                 summary: Example 1 - RegistrationSuccessful
                 value:
-                  firstName: "David"
-                  lastName: "Jones"
-                  email: "test@email.com"
-                  reference: "REG12345"
+                  trackerId: "9d2dee33-7803-485a-a2b1-2c7538e597ee"
+                  sendToEmails:
+                    - "test1@email.com"
+                    - "test2@email.com"
+                  templateParams:
+                    firstName: "David"
+                    lastName: "Jones"
+                    reference: "REG12345"
               Example2:
-                summary: Example 2 - RegistrationOperatorNotification
+                summary: Example 2 - AddPropertyRequestSent
                 value:
-                  reference: "REG12345"
-              Example3:
-                summary: Example 3 - AddPropertyRequestSent
-                value:
-                  firstName: "Joe"
-                  lastName: "Noggins"
-                  email: "test@email.com"
-                  reference: "AP123456789"
-                  postcodeFirstPart: "AA1"
+                  trackerId: "9d2dee33-7803-485a-a2b1-2c7538e597ee"
+                  sendToEmails:
+                    - "test1@email.com"
+                    - "test2@email.com"
+                  templateParams:
+                    firstName: "David"
+                    lastName: "Jones"
+                    reference: "REG12345"
+                    postcodeFirstPart: "AA1"
       responses:
         '201':
           description: Email dispatch task successfully created.
@@ -79,6 +82,8 @@ paths:
             "code"                        "reason"
             EMAIL_TEMPLATE_NOT_FOUND      Wrong email template id is used
             MISSED_PARAMETER              Submission has not passed validation - missed parameter.
+            JSON_VALIDATION_ERROR         Indicates that one or more errors occurred during the validation of the JSON payload.
+            MONGO_DB_ERROR                Indicates an error related to operations performed on the MongoDB database.
           content:
             application/json;charset=UTF-8:
               schema:
@@ -168,20 +173,42 @@ components:
     request:
       title: Send Email Request Schema
       type: object
+      required:
+        - trackerId
+        - sendToEmails
+        - templateParams
       properties:
+        trackerId:
+          description: UUID to track email
+          format: uuid
+          minLength: 1
+          maxLength: 64
+          example: 9d2dee33-7803-485a-a2b1-2c7538e597ee
+        sendToEmails:
+          description: List of email addresses to send to
+          type: array
+          minItems: 1
+          uniqueItems: true
+          items:
+            type: string
+            minLength: 1
+            maxLength: 150
+            format: email
+        templateParams:
+          additionalProperties:
+            type: string
+          example:
+            firstName: "Joe"
+            lastName: "Noggins"
+            reference: "AP123456789"
+            postcode: "AA1 1AA"
         callbackUrl:
+          description: Optional. Specifies the URL to be invoked in the event of a failure when attempting to send the email. If provided, this callback URL will receive information detailing the cause of the failure.
           minLength: 1
           maxLength: 255
           format: uri
           type: string
-      additionalProperties:
-        type: string
-      example:
-        firstName: "Joe"
-        lastName: "Noggins"
-        email: "test@email.com"
-        reference: "AP123456789"
-        postcode: "AA1 1AA"
+      additionalProperties: false
     failureResponse:
       title: 'Send Email Error Response Schema'
       type: object
