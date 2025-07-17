@@ -16,13 +16,15 @@
 
 package uk.gov.hmrc.ngrnotifyproto.controllers
 
-import play.api.{Configuration, Logging}
+import play.api.Logging
 import play.api.libs.json.*
 import play.api.mvc.{Action, ControllerComponents, Request, Result}
+import uk.gov.hmrc.ngrnotifyproto.model.EmailTemplate
 import uk.gov.hmrc.ngrnotifyproto.model.EmailTemplate.*
+import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
 import uk.gov.hmrc.ngrnotifyproto.model.email.*
+import uk.gov.hmrc.ngrnotifyproto.model.request.SendEmailRequest
 import uk.gov.hmrc.ngrnotifyproto.model.response.{ApiFailure, ApiSuccess}
-import uk.gov.hmrc.ngrnotifyproto.model.{EmailTemplate, OperatorNotification, UserNotification}
 import uk.gov.hmrc.ngrnotifyproto.repository.EmailNotificationRepo
 import uk.gov.hmrc.play.bootstrap.backend.controller.BackendController
 
@@ -30,13 +32,13 @@ import javax.inject.{Inject, Singleton}
 import scala.collection.Seq
 import scala.collection.immutable.ArraySeq
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 /**
   * @author Yuriy Tumakha
   */
 @Singleton
 class EmailSenderController @Inject() (
-  configuration: Configuration,
   emailNotificationRepo: EmailNotificationRepo,
   cc: ControllerComponents
 )(using
@@ -44,44 +46,53 @@ class EmailSenderController @Inject() (
 ) extends BackendController(cc)
     with Logging:
 
-  private val operatorEmail = configuration.get[String]("operator.email")
-
   def sendEmail(emailTemplateId: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
-    val emailTemplate = EmailTemplate.valueOf(emailTemplateId)
-
-    emailTemplate match {
-      case `ngr_registration_successful`            => parse[RegistrationSuccessful]
-      case `ngr_registration_operator_notification` => parse[RegistrationOperatorNotification]
-      case `ngr_add_property_request_sent`          => parse[AddPropertyRequestSent]
-    } match {
-      case Right((email, params)) => sendEmail(emailTemplate, email, params)
-      case Left(result)           => Future.successful(result)
+    Try(EmailTemplate.valueOf(emailTemplateId)).toEither.fold(
+      error => Left(BadRequest(buildFailureResponse("EMAIL_TEMPLATE_NOT_FOUND", error.getMessage))),
+      emailTemplate =>
+        (
+          emailTemplate match {
+            case `ngr_registration_successful`   => parseAndValidateTemplateParams[RegistrationSuccessful]
+            case `ngr_add_property_request_sent` => parseAndValidateTemplateParams[AddPropertyRequestSent]
+          }
+        ).map { req =>
+          EmailNotification(emailTemplate, req.trackerId, req.sendToEmails, req.templateParams, req.callbackUrl)
+        }
+    ) match {
+      case Right(notification) => saveEmailNotification(notification)
+      case Left(result)        => Future.successful(result)
     }
   }
 
-  private def parse[T](using
+  private def parseAndValidateTemplateParams[T](using
     request: Request[JsValue],
-    rds: Reads[T],
-    tjs: OWrites[T]
-  ): Either[Result, (String, JsObject)] =
-    request.body.validate[T] match {
-      case JsSuccess(notification: T, _)                            =>
-        val email          = notification match {
-          case userNotification: UserNotification => userNotification.email
-          case _: OperatorNotification            => operatorEmail
-        }
-        val templateParams = Json.toJsObject[T](notification)
+    rds: Reads[T]
+  ): Either[Result, SendEmailRequest] =
+    (
+      request.body.validate[SendEmailRequest] match {
+        case JsSuccess(sendEmailRequest, _)                           => Right(sendEmailRequest)
+        case JsError(errors: Seq[(JsPath, Seq[JsonValidationError])]) => buildValidationErrorsResponse(errors)
+      }
+    ).flatMap(sendEmailRequest =>
+      sendEmailRequest.templateParams.validate[T] match {
+        case JsSuccess(_, _)                                          => Right(sendEmailRequest)
+        case JsError(errors: Seq[(JsPath, Seq[JsonValidationError])]) => buildValidationErrorsResponse(errors)
+      }
+    )
 
-        Right(email -> templateParams)
-      case JsError(errors: Seq[(JsPath, Seq[JsonValidationError])]) =>
-        val failures = errors.map { case (jsPath, jsonErrors) =>
-          ApiFailure(
-            "JSON_VALIDATION_ERROR",
-            s"$jsPath <- ${jsonErrors.map(printValidationError).mkString(" | ")}"
-          )
-        }
-        Left(BadRequest(Json.toJson(failures)))
+  private def buildFailureResponse(code: String, reason: String): JsValue =
+    Json.toJson(Seq(ApiFailure(code, reason)))
+
+  private def buildValidationErrorsResponse[T](
+    errors: Seq[(JsPath, Seq[JsonValidationError])]
+  ): Either[Result, T] =
+    val failures = errors.map { case (jsPath, jsonErrors) =>
+      ApiFailure(
+        "JSON_VALIDATION_ERROR",
+        s"$jsPath <- ${jsonErrors.map(printValidationError).mkString(" | ")}"
+      )
     }
+    Left(BadRequest(Json.toJson(failures)))
 
   private def printValidationError(error: JsonValidationError): String =
     val msgArgs = error.args match {
@@ -90,20 +101,16 @@ class EmailSenderController @Inject() (
     }
     error.message + msgArgs
 
-  private def sendEmail[T](emailTemplate: EmailTemplate, email: String, templateParams: JsObject): Future[Result] =
-    logger.info(s"\nSend $emailTemplate to $email. Template params: $templateParams")
+  private def saveEmailNotification[T](emailNotification: EmailNotification): Future[Result] =
+    logger.info(s"\nSend ${emailNotification.emailTemplateId}. TrackerId: ${emailNotification.trackerId}")
 
     emailNotificationRepo
-      .save(emailTemplate, email, templateParams)
+      .save(emailNotification)
       .map { id =>
-        logger.info(s"\nSaved email notification with ID = $id")
+        logger.info(s"\nSaved email notification with ID = $id. TrackerId: ${emailNotification.trackerId}")
         Created(Json.toJsObject(ApiSuccess("Success", "Email dispatch task successfully created.")))
       }
       .recover { error =>
-        logger.error("Error on save to Mongo", error)
-        InternalServerError(
-          Json.toJson(
-            Seq(ApiFailure("MONGO_DB_ERROR", error.getMessage))
-          )
-        )
+        logger.error(s"Error on save to Mongo. TrackerId: ${emailNotification.trackerId}", error)
+        InternalServerError(buildFailureResponse("MONGO_DB_ERROR", error.getMessage))
       }

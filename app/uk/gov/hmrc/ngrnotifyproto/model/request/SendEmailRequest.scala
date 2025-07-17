@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ngrnotifyproto.model.email
+package uk.gov.hmrc.ngrnotifyproto.model.request
 
 import play.api.libs.json.{JsObject, Json, OFormat}
-import uk.gov.hmrc.ngrnotifyproto.model.OperatorNotification
+
+import java.util.UUID
 
 /**
   * @author Yuriy Tumakha
   */
-case class RegistrationOperatorNotification(reference: String) extends OperatorNotification
+case class SendEmailRequest(
+  trackerId: UUID,
+  sendToEmails: Seq[String],
+  templateParams: JsObject,
+  callbackUrl: Option[String]
+)
 
-object RegistrationOperatorNotification:
-  implicit val format: OFormat[RegistrationOperatorNotification] = Json.format[RegistrationOperatorNotification]
+object SendEmailRequest:
+  implicit val format: OFormat[SendEmailRequest] = Json.format[SendEmailRequest]
