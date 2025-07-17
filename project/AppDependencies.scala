@@ -8,7 +8,7 @@ object AppDependencies {
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"       %% "bootstrap-backend-play-30" % bootstrapVersion,
     "uk.gov.hmrc.mongo" %% "hmrc-mongo-play-30"        % hmrcMongoVersion,
-    "org.webjars"        % "swagger-ui"                % "5.25.3"
+    "org.webjars"        % "swagger-ui"                % "5.26.2"
   )
 
   val test: Seq[ModuleID] = Seq(
