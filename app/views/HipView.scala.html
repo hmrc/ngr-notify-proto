@@ -1,0 +1,44 @@
+@*
+ * Copyright 2025 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcStandardPage
+@import uk.gov.hmrc.hmrcfrontend.views.viewmodels.hmrcstandardpage.HmrcStandardPageParams
+
+@this(hmrcStandardPage: HmrcStandardPage)
+
+@()(implicit request: RequestHeader, messages: Messages)
+
+@content = {
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <h1 class="govuk-heading-l">@{Text("HIP Testing Hub").asHtml}</h1>
+            <p1 class="govuk-caption-m hmrc-caption-m">
+                @{Text("Here you can test various HIP endpoints").asHtml}
+            </p1>
+            <p2>
+            <a href="@routes.HipController.hipHelloWorld()">@{Text("link placeholder").asHtml}</a>
+            </p2>
+        </div>
+    </div>
+}
+
+@hmrcStandardPage(
+    HmrcStandardPageParams(
+        pageTitle = Some("HIP Testing Hub"),
+        backLink = None,
+    )
+)(content)
