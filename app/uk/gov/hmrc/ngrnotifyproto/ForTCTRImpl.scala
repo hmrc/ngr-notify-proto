@@ -20,7 +20,6 @@ import org.apache.pekko.actor.ActorSystem
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
 import uk.gov.hmrc.ngrnotifyproto.config.AppConfig
 import uk.gov.hmrc.ngrnotifyproto.infrastructure.RegularSchedule
-import uk.gov.hmrc.ngrnotifyproto.repository.*
 import uk.gov.hmrc.ngrnotifyproto.sendSubmission.*
 
 import java.time.Clock
@@ -31,13 +30,8 @@ import scala.concurrent.ExecutionContext
 class ForTCTRImpl @Inject()(
   actorSystem: ActorSystem,
   tctrConfig: AppConfig,
-//  audit: ForTCTRAudit,
   systemClock: Clock,
   regularSchedule: RegularSchedule,
-//  credentialsMongoRepo: CredentialsRepo,
-//  connectedMongoRepository: ConnectedMongoRepository,
-//  requestReferenceNumberMongoRepository: RequestReferenceNumberMongoRepository,
-//  testDataImporter: TestDataImporter,
   implicit val ec: ExecutionContext,
   mongoLockRepository: MongoLockRepository
 ) {
@@ -45,7 +39,6 @@ class ForTCTRImpl @Inject()(
   import tctrConfig.*
 
   if submissionExportEnabled then
-//    val repo     = connectedMongoRepository
     val exporter = new ExportConnectedSubmissionsVOA(systemClock, tctrConfig)
     new ConnectedSubmissionExporter(
       mongoLockRepository,
@@ -55,6 +48,4 @@ class ForTCTRImpl @Inject()(
       actorSystem.eventStream,
       regularSchedule
     ).start()
-    //NEED THIS
-
 }

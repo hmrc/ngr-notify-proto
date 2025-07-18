@@ -43,7 +43,7 @@ class ExportConnectedSubmissionsVOA @Inject() (
     with Logging {
 
   override def exportNow(size: Int)(implicit ec: ExecutionContext): Future[Unit] =
-    logger.warn("IS THIS GOING TO WORK?")
+    logger.warn(s"Here is the scheduler running for 120 seconds")
     Future.unit
 }
 //    connectedMongoRepository.getSubmissions(size).flatMap { submissions =>
