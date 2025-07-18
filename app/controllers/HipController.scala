@@ -46,6 +46,15 @@ class HipController @Inject()(hipConnector: HipConnector,
   }
 
   def hipHelloWorld(): Action[AnyContent] = Action.async { implicit request =>
+        val clientId: String = request.headers.get("Client-Id").getOrElse("")
+        val clientSecret: String = request.headers.get("Client-Secret").getOrElse("")
+        val eventuallyHelloWorldResponse: Future[HelloWorldResponse] = hipConnector.callHelloWorld(clientId, clientSecret)
+
+        eventuallyHelloWorldResponse.map(helloWorldResponse =>
+          Ok(s"Response was: ${helloWorldResponse.name}"))
+  }
+
+  def hipHelloWorldForm(): Action[AnyContent] = Action.async { implicit request =>
     helloWorldForm.bindFromRequest.fold(
       formWithErrors => {
         Future.successful(Ok(hipHubView(formWithErrors)))
