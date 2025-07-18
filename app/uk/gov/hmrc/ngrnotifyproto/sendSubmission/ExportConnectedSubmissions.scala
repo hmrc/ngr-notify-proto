@@ -36,7 +36,6 @@ trait ExportConnectedSubmissions {
 @Singleton
 class ExportConnectedSubmissionsVOA @Inject() (
 //  connectedMongoRepository: ConnectedMongoRepository,
-  //// TODO Add email connector here
   clock: Clock,
 //  audit: ForTCTRAudit,
   forConfig: AppConfig
