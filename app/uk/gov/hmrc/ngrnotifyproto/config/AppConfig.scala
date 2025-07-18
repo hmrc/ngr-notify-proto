@@ -22,9 +22,9 @@ import play.api.Configuration
 @Singleton
 class AppConfig @Inject() (config: Configuration) {
   val appName: String = config.get[String]("appName")
-  lazy val submissionExportEnabled = config.get[Boolean]("submissionExport.enabled")
-  lazy val exportBatchSize = config.get[Int]("submissionExport.batchSize")
-  lazy val exportFrequency = config.get[Int]("submissionExport.frequencySeconds")
+  lazy val submissionExportEnabled = config.get[Boolean]("sendSubmission.enabled")
+  lazy val exportBatchSize = config.get[Int]("sendSubmission.batchSize")
+  lazy val exportFrequency = config.get[Int]("sendSubmission.frequencySeconds")
 
 }
 
