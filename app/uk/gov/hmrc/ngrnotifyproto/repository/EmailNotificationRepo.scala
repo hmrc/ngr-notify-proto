@@ -22,11 +22,9 @@ import org.mongodb.scala.bson.conversions.Bson
 import org.mongodb.scala.model.*
 import org.mongodb.scala.result.DeleteResult
 import org.mongodb.scala.{ObservableFuture, SingleObservableFuture}
-import play.api.libs.json.JsObject
 import uk.gov.hmrc.mongo.MongoComponent
 import uk.gov.hmrc.mongo.play.json.formats.MongoJavatimeFormats
 import uk.gov.hmrc.mongo.play.json.{Codecs, PlayMongoRepository}
-import uk.gov.hmrc.ngrnotifyproto.model.EmailTemplate
 import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
 import uk.gov.hmrc.ngrnotifyproto.repository.EmailNotificationRepo.saveForDays
 
@@ -68,14 +66,12 @@ class EmailNotificationRepo @Inject() (mongo: MongoComponent)(using
   /**
     * Save email notification.
     *
-    * @param emailTemplate EmailTemplate
-    * @param email Receiver email
-    * @param templateParams Template params in JSON
+    * @param emailNotification: EmailNotification
     * @return ObjectId
     */
-  def save(emailTemplate: EmailTemplate, email: String, templateParams: JsObject): Future[ObjectId] =
+  def save(emailNotification: EmailNotification): Future[ObjectId] =
     collection
-      .insertOne(EmailNotification(emailTemplate, email, templateParams))
+      .insertOne(emailNotification)
       .toFuture()
       .map(_.getInsertedId.asObjectId().getValue)
 

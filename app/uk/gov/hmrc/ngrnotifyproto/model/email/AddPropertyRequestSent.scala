@@ -17,7 +17,6 @@
 package uk.gov.hmrc.ngrnotifyproto.model.email
 
 import play.api.libs.json.{JsObject, Json, OFormat}
-import uk.gov.hmrc.ngrnotifyproto.model.UserNotification
 
 /**
   * @author Yuriy Tumakha
@@ -25,10 +24,9 @@ import uk.gov.hmrc.ngrnotifyproto.model.UserNotification
 case class AddPropertyRequestSent(
   firstName: String,
   lastName: String,
-  email: String,
   reference: String,
   postcodeFirstPart: String
-) extends UserNotification
+)
 
 object AddPropertyRequestSent:
   implicit val format: OFormat[AddPropertyRequestSent] = Json.format[AddPropertyRequestSent]
