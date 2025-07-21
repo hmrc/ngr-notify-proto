@@ -20,9 +20,8 @@ import java.util.Base64
 
 object AuthHeaderBuilder {
   def buildAuthHeader(clientId: String, clientSecret: String): String = {
-    val authHeader = Base64.getEncoder.encodeToString(s"$clientId:$clientSecret".getBytes("UTF-8"))
-    println("XXXX" + authHeader)
-    authHeader
+    val authHeaderRaw = Base64.getEncoder.encodeToString(s"$clientId:$clientSecret".getBytes("UTF-8"))
+    s"Basic $authHeaderRaw"
   }
 }
 
