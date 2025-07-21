@@ -30,7 +30,7 @@ class ForTCTRModule extends Module with Logging {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[?]] =
     Seq(
       bind[RegularSchedule].to[DefaultRegularSchedule],
-      bind[ForTCTRImpl].toSelf.eagerly(),
+      bind[ForNGRImpl].toSelf.eagerly(),
       bind[Clock].toProvider[ClockProvider]
     )
 }

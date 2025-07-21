@@ -20,6 +20,7 @@ import org.apache.pekko.actor.ActorSystem
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
 import uk.gov.hmrc.ngrnotifyproto.config.AppConfig
 import uk.gov.hmrc.ngrnotifyproto.infrastructure.RegularSchedule
+import uk.gov.hmrc.ngrnotifyproto.repository.EmailNotificationRepo
 import uk.gov.hmrc.ngrnotifyproto.sendSubmission.*
 
 import java.time.Clock
@@ -27,19 +28,20 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class ForTCTRImpl @Inject()(
+class ForNGRImpl @Inject()(
   actorSystem: ActorSystem,
   tctrConfig: AppConfig,
   systemClock: Clock,
   regularSchedule: RegularSchedule,
   implicit val ec: ExecutionContext,
-  mongoLockRepository: MongoLockRepository
+  mongoLockRepository: MongoLockRepository,
+  emailNotificationRepo: EmailNotificationRepo
 ) {
 
   import tctrConfig.*
 
   if submissionExportEnabled then
-    val exporter = new ExportConnectedSubmissionsVOA(systemClock, tctrConfig)
+    val exporter = new ExportConnectedSubmissionsVOA(emailNotificationRepo, systemClock, tctrConfig)
     new ConnectedSubmissionExporter(
       mongoLockRepository,
       exporter,
