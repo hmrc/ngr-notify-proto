@@ -18,7 +18,7 @@ package connectors
 
 import config.AppConfig
 import models.{HelloWorldResponse, HipRequest, HipResponse}
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.libs.ws.writeableOf_JsValue
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.http.client.HttpClientV2
@@ -34,22 +34,17 @@ class HipConnector @Inject()(httpClient: HttpClientV2, appConfig: AppConfig)(imp
 //  private val hipURL: URL = url"xxx"
   private val hipRequest: HipRequest = HipRequest("Test Body")
 
-  def callHelloWorld(clientId: String, clientSecret: String)(implicit headerCarrier: HeaderCarrier): Future[HelloWorldResponse] = {
+  def callHelloWorld(clientId: String, clientSecret: String)(implicit headerCarrier: HeaderCarrier): Future[JsValue] = {
     val hipHelloWorldURL: URL = url"https://hip.ws.ibt.hmrc.gov.uk/demo/hello-world"
     val authHeader: String = AuthHeaderBuilder.buildAuthHeader(clientId, clientSecret)
 
-    //    headerCarrier.withExtraHeaders(
-    //      HeaderNames.AUTHORIZATION -> AuthHeaderBuilder.buildAuthHeader,
-    //      HeaderNames.ACCEPT -> "application/json",
-    //      HeaderNames.CONTENT_TYPE -> "application/json",
-    //      "OriginatorId" -> "NGR")
     httpClient
       .get(hipHelloWorldURL)
       .setHeader(HeaderNames.AUTHORIZATION -> authHeader)
       .setHeader(HeaderNames.ACCEPT -> "application/json")
       .setHeader(HeaderNames.CONTENT_TYPE -> "application/json")
       .setHeader("OriginatorId" -> "NGR")
-      .execute[HelloWorldResponse]
+      .execute[JsValue]
   }
 
 //  def callHelloWorldOrig(implicit headerCarrier: HeaderCarrier): Future[HelloWorldResponse] = {

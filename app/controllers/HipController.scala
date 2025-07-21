@@ -27,6 +27,7 @@ import views.html.{HelloWorldView, HipHubView}
 import play.api.data._
 import play.api.data.Forms._
 import play.api.i18n.I18nSupport
+import play.api.libs.json.JsValue
 
 
 @Singleton()
@@ -48,26 +49,26 @@ class HipController @Inject()(hipConnector: HipConnector,
   def hipHelloWorld(): Action[AnyContent] = Action.async { implicit request =>
         val clientId: String = request.headers.get("Client-Id").getOrElse("")
         val clientSecret: String = request.headers.get("Client-Secret").getOrElse("")
-        val eventuallyHelloWorldResponse: Future[HelloWorldResponse] = hipConnector.callHelloWorld(clientId, clientSecret)
+        val eventuallyHelloWorldResponse: Future[JsValue] = hipConnector.callHelloWorld(clientId, clientSecret)
 
         eventuallyHelloWorldResponse.map(helloWorldResponse =>
-          Ok(s"Response was: ${helloWorldResponse.name}"))
+          Ok(s"Response was: ${helloWorldResponse}"))
   }
 
-  def hipHelloWorldForm(): Action[AnyContent] = Action.async { implicit request =>
-    helloWorldForm.bindFromRequest.fold(
-      formWithErrors => {
-        Future.successful(Ok(hipHubView(formWithErrors)))
-      },
-      { case (clientId, clientSecret) =>
-        val eventuallyHelloWorldResponse: Future[HelloWorldResponse] = hipConnector.callHelloWorld(clientId, clientSecret)
-        eventuallyHelloWorldResponse.map(helloWorldResponse => println(helloWorldResponse.name))
-        eventuallyHelloWorldResponse.map(helloWorldResponse =>
-          Ok(helloWorldView(helloWorldResponse.name))
-        )
-      }
-    )
-  }
+//  def hipHelloWorldForm(): Action[AnyContent] = Action.async { implicit request =>
+//    helloWorldForm.bindFromRequest.fold(
+//      formWithErrors => {
+//        Future.successful(Ok(hipHubView(formWithErrors)))
+//      },
+//      { case (clientId, clientSecret) =>
+//        val eventuallyHelloWorldResponse: Future[HelloWorldResponse] = hipConnector.callHelloWorld(clientId, clientSecret)
+//        eventuallyHelloWorldResponse.map(helloWorldResponse => println(helloWorldResponse.name))
+//        eventuallyHelloWorldResponse.map(helloWorldResponse =>
+//          Ok(helloWorldView(helloWorldResponse.name))
+//        )
+//      }
+//    )
+//  }
 
 //  def hipHelloWorldOrig(): Action[AnyContent] = Action.async { implicit request =>
 //    val eventuallyHelloWorldResponse: Future[HelloWorldResponse] = hipConnector.callHelloWorld
