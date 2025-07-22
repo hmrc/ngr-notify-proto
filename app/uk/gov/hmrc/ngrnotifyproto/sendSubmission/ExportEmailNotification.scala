@@ -19,6 +19,7 @@ package uk.gov.hmrc.ngrnotifyproto.sendSubmission
 import com.google.inject.ImplementedBy
 import play.api.Logging
 import uk.gov.hmrc.ngrnotifyproto.config.AppConfig
+import uk.gov.hmrc.ngrnotifyproto.connector.EmailConnector
 import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
 import uk.gov.hmrc.ngrnotifyproto.repository.EmailNotificationRepo
 
@@ -36,6 +37,7 @@ trait ExportConnectedSubmissions {
 class ExportConnectedSubmissionsVOA @Inject() (
                                                 emailNotificationRepo: EmailNotificationRepo,
                                                 clock: Clock,
+                                                emailConnector: EmailConnector,
                                                 //  audit: ForTCTRAudit,
                                                 forConfig: AppConfig
                                               ) extends ExportConnectedSubmissions
@@ -62,6 +64,7 @@ class ExportConnectedSubmissionsVOA @Inject() (
         logger.warn(s"Found ${emailNotification.trackerId} with send to ${sendTO} notification to send email")
       // TODO Audit send email
       // TODO Add email connector
+        emailConnector.sendSubmissionConfirmation(emailNotification)
       // TODO If Success - remove notification from the DB
       // TODO If fail - send callback to frontend
       Future.unit
