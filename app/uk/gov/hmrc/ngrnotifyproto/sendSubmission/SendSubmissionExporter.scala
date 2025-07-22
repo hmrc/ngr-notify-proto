@@ -18,6 +18,7 @@ package uk.gov.hmrc.ngrnotifyproto.sendSubmission
 
 import org.apache.pekko.actor.Scheduler
 import org.apache.pekko.event.EventStream
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.lock.{LockService, MongoLockRepository}
 import uk.gov.hmrc.ngrnotifyproto.infrastructure.{LockedJobScheduler, Schedule}
 
@@ -27,7 +28,7 @@ import scala.language.postfixOps
 
 class ConnectedSubmissionExporter(
   mongoLockRepository: MongoLockRepository,
-  exporter: ExportConnectedSubmissions,
+  exporter: ExportEmailNotification,
   exportBatchSize: Int,
   scheduler: Scheduler,
   eventStream: EventStream,
@@ -40,7 +41,7 @@ class ConnectedSubmissionExporter(
 
   override val name: String = "SendSubmissionScheduler"
 
-  override def runJob()(implicit ec: ExecutionContext): Future[SubmissionExportComplete] =
+  override def runJob()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[SubmissionExportComplete] =
     exporter.exportNow(exportBatchSize).map(_ => SubmissionExportComplete("SendSubmissionScheduler finished"))
 
 }

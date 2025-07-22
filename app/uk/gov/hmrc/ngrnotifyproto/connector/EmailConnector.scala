@@ -79,6 +79,7 @@ class EmailConnector @Inject()(
     for (email <- emails) {
       sendEmail(email, emailTemplateId.toString, parameters)
     }
+    Future.successful(HttpResponse(404, "TEST TEST TEST"))
 
   private def sendEmail(email: String, templateId: String, parametersJson: JsObject)(implicit
                                                                                      hc: HeaderCarrier
