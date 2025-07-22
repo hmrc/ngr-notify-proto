@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http:www.apache.org/licenses/LICENSE-2.0
+ *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -57,7 +57,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class EmailConnector @Inject()(
   servicesConfig: ServicesConfig,
   httpClientV2: HttpClientV2,
-  dateUtilLocalised: DateUtilLocalised
+//  dateUtilLocalised: DateUtilLocalised
 )(implicit
   ec: ExecutionContext
 ) extends Logging {
@@ -70,19 +70,15 @@ class EmailConnector @Inject()(
     "cy" -> Lang("cy")
   ).withDefaultValue(englishLang)
 
-  private val ngr_submission_confirmation        = "ngr_submission_confirmation"
+  private val ngr_registration_successful        = "ngr_registration_successful"
 
-  def sendSubmissionConfirmation(emailNotification: EmailNotification)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    submission.aboutYouAndTheProperty
-      .flatMap(_.customerDetails)
-      .fold {
-        logger.warn(s"Send email to user canceled: 404 CustomerDetails not found")
-        Future.successful(HttpResponse(404, "CustomerDetails not found"))
-      } { customerDetails =>
-        val parameters = Json.obj("customerName" -> customerDetails.fullName)
-        val email      = customerDetails.contactDetails.email
-        sendEmail(email, ngr_submission_confirmation, parameters)
-      }
+  def sendEmailNotification(emailNotification: EmailNotification)(implicit hc: HeaderCarrier): Future[HttpResponse] =
+    val parameters = Json.obj("firstName" -> emailNotification.templateParams.value)
+    val emailTemplateId = emailNotification.emailTemplateId
+    val emails = emailNotification.sendToEmails
+    for (email <- emails) {
+      sendEmail(email, emailTemplateId.toString, parameters)
+    }
 
   private def sendEmail(email: String, templateId: String, parametersJson: JsObject)(implicit
                                                                                      hc: HeaderCarrier
@@ -111,5 +107,5 @@ class EmailConnector @Inject()(
         Future.failed(e)
       }
   }
-  
+
 }

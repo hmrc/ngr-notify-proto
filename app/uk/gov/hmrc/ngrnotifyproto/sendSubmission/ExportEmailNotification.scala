@@ -64,7 +64,7 @@ class ExportConnectedSubmissionsVOA @Inject() (
         logger.warn(s"Found ${emailNotification.trackerId} with send to ${sendTO} notification to send email")
       // TODO Audit send email
       // TODO Add email connector
-        emailConnector.sendSubmissionConfirmation(emailNotification)
+        emailConnector.sendEmailNotification(emailNotification)
       // TODO If Success - remove notification from the DB
       // TODO If fail - send callback to frontend
       Future.unit
