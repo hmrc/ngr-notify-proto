@@ -1,4 +1,5 @@
 # microservice specific routes
 
+GET        /hip-hello-world         controllers.HipController.hipHelloWorld()
 # Send email
 POST    /sendEmail/:emailTemplateId             uk.gov.hmrc.ngrnotifyproto.controllers.EmailSenderController.sendEmail(emailTemplateId)
