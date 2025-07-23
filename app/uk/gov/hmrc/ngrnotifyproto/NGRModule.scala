@@ -25,12 +25,12 @@ import java.time.Clock
 import javax.inject.Singleton
 
 @Singleton
-class ForTCTRModule extends Module with Logging {
+class NGRModule extends Module with Logging {
 
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[?]] =
     Seq(
       bind[RegularSchedule].to[DefaultRegularSchedule],
-      bind[ForNGRImpl].toSelf.eagerly(),
+      bind[NGRImpl].toSelf.eagerly(),
       bind[Clock].toProvider[ClockProvider]
     )
 }

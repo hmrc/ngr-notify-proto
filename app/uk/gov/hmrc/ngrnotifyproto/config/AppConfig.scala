@@ -26,8 +26,6 @@ class AppConfig @Inject() (config: Configuration) {
   lazy val retryWindowHours = config.get[Int]("sendSubmission.retryWindowHours")
   lazy val exportFrequency = config.get[Int]("sendSubmission.frequencySeconds")
   lazy val exportBatchSize = config.get[Int]("sendSubmission.batchSize")
-
-
 }
 
 

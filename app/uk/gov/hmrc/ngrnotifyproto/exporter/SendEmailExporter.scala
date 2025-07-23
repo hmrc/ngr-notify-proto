@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ngrnotifyproto.sendSubmission
+package uk.gov.hmrc.ngrnotifyproto.exporter
 
 import org.apache.pekko.actor.Scheduler
 import org.apache.pekko.event.EventStream
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.lock.{LockService, MongoLockRepository}
 import uk.gov.hmrc.ngrnotifyproto.infrastructure.{LockedJobScheduler, Schedule}
 
@@ -26,24 +25,24 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContext, Future}
 import scala.language.postfixOps
 
-class ConnectedSubmissionExporter(
+class SendEmailExporter(
   mongoLockRepository: MongoLockRepository,
   exporter: ExportEmailNotification,
   exportBatchSize: Int,
   scheduler: Scheduler,
   eventStream: EventStream,
   val schedule: Schedule
-) extends LockedJobScheduler[SubmissionExportComplete](
-      LockService(mongoLockRepository, "SendSubmissionExporterLock", 1 hour),
+) extends LockedJobScheduler[SendEmailComplete](
+      LockService(mongoLockRepository, "SendEmailExporterLock", 1 hour),
       scheduler,
       eventStream
     ) {
 
-  override val name: String = "SendSubmissionScheduler"
+  override val name: String = "SendEmailScheduler"
 
-  override def runJob()(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[SubmissionExportComplete] =
-    exporter.exportNow(exportBatchSize).map(_ => SubmissionExportComplete("SendSubmissionScheduler finished"))
+  override def runJob()(implicit ec: ExecutionContext): Future[SendEmailComplete] =
+    exporter.exportNow(exportBatchSize).map(_ => SendEmailComplete("SendEmailScheduler finished"))
 
 }
 
-case class SubmissionExportComplete(msg: String)
+case class SendEmailComplete(msg: String)

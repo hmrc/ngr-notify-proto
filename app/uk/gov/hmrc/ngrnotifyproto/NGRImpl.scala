@@ -22,14 +22,14 @@ import uk.gov.hmrc.ngrnotifyproto.config.AppConfig
 import uk.gov.hmrc.ngrnotifyproto.connector.EmailConnector
 import uk.gov.hmrc.ngrnotifyproto.infrastructure.RegularSchedule
 import uk.gov.hmrc.ngrnotifyproto.repository.EmailNotificationRepo
-import uk.gov.hmrc.ngrnotifyproto.sendSubmission.*
+import uk.gov.hmrc.ngrnotifyproto.exporter.*
 
 import java.time.Clock
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class ForNGRImpl @Inject()(
+class NGRImpl @Inject()(
   actorSystem: ActorSystem,
   tctrConfig: AppConfig,
   systemClock: Clock,
@@ -44,7 +44,7 @@ class ForNGRImpl @Inject()(
 
   if submissionExportEnabled then
     val exporter = new ExportEmailNotificationVOA(emailNotificationRepo, systemClock, emailConnector, tctrConfig)
-    new ConnectedSubmissionExporter(
+    new SendEmailExporter(
       mongoLockRepository,
       exporter,
       exportBatchSize,

@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ngrnotifyproto.sendSubmission
+package uk.gov.hmrc.ngrnotifyproto.exporter
 
 import com.google.inject.ImplementedBy
 import play.api.Logging
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.ngrnotifyproto.config.AppConfig
 import uk.gov.hmrc.ngrnotifyproto.connector.EmailConnector
 import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
@@ -31,7 +30,7 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @ImplementedBy(classOf[ExportEmailNotificationVOA])
 trait ExportEmailNotification {
-  def exportNow(size: Int)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Unit]
+  def exportNow(size: Int): Future[Unit]
 }
 
 @Singleton
@@ -39,22 +38,21 @@ class ExportEmailNotificationVOA @Inject() (
                                                 emailNotificationRepo: EmailNotificationRepo,
                                                 clock: Clock,
                                                 emailConnector: EmailConnector,
-                                                //  audit: ForTCTRAudit,
                                                 forConfig: AppConfig
-                                              ) extends ExportEmailNotification
+                                              )(implicit  ec: ExecutionContext) extends ExportEmailNotification
   with Logging {
 
-  override def exportNow(size: Int)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Unit] =
+  override def exportNow(size: Int): Future[Unit] =
     emailNotificationRepo.getNotificationsBatch(size).flatMap { emailNotifications =>
       logger.warn(s"Found ${emailNotifications.length} email notifications to export")
       processSequentially(emailNotifications)
     }
 
-  private def processSequentially(emailNotifications: Seq[EmailNotification])(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Unit] =
+  private def processSequentially(emailNotifications: Seq[EmailNotification]): Future[Unit] =
     if emailNotifications.isEmpty then Future.unit
     else processNext(emailNotifications.head).flatMap(_ => processSequentially(emailNotifications.tail))
 
-  private def processNext(emailNotification: EmailNotification)(implicit hc: HeaderCarrier, executionContext: ExecutionContext): Future[Unit] =
+  private def processNext(emailNotification: EmailNotification)(implicit executionContext: ExecutionContext): Future[Unit] =
     if isTooLongInQueue(emailNotification) then
       logger.warn(s"Unable to send email reached end of retry window, ref: ${emailNotification.trackerId}.")
       // TODO Audit removal from queue
@@ -64,7 +62,6 @@ class ExportEmailNotificationVOA @Inject() (
       for (sendTO <- emailNotification.sendToEmails)
         logger.warn(s"Found ${emailNotification.trackerId} with send to ${sendTO} notification to send email")
       // TODO Audit send email
-      // TODO Add email connector
         emailConnector.sendEmailNotification(emailNotification)
       // TODO If Success - remove notification from the DB
       // TODO If fail - send callback to frontend

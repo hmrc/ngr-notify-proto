@@ -42,10 +42,7 @@ import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, StringContextOps}
 import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
-//import uk.gov.hmrc.tctr.backend.models.{ConnectedSubmission, NotConnectedSubmission}
-//import uk.gov.hmrc.tctr.backend.util.{DateUtil, DateUtilLocalised}
 
-import java.time.ZonedDateTime
 import java.util.Locale
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -57,7 +54,6 @@ import scala.concurrent.{ExecutionContext, Future}
 class EmailConnector @Inject()(
   servicesConfig: ServicesConfig,
   httpClientV2: HttpClientV2,
-//  dateUtilLocalised: DateUtilLocalised
 )(implicit
   ec: ExecutionContext
 ) extends Logging {
@@ -72,25 +68,22 @@ class EmailConnector @Inject()(
 
   private val ngr_registration_successful        = "ngr_registration_successful"
 
-  def sendEmailNotification(emailNotification: EmailNotification)(implicit hc: HeaderCarrier): Future[HttpResponse] =
-    val parameters = Json.obj("firstName" -> emailNotification.templateParams.value)
+  def sendEmailNotification(emailNotification: EmailNotification): Future[HttpResponse] =
+    val parameters = emailNotification.templateParams
     val emailTemplateId = emailNotification.emailTemplateId
     val emails = emailNotification.sendToEmails
-    for (email <- emails) {
-      sendEmail(email, emailTemplateId.toString, parameters)
-    }
-    Future.successful(HttpResponse(404, "TEST TEST TEST"))
+    sendEmail(emails, emailTemplateId.toString, parameters)
+  
 
-  private def sendEmail(email: String, templateId: String, parametersJson: JsObject)(implicit
-                                                                                     hc: HeaderCarrier
-  ): Future[HttpResponse] = {
+  private def sendEmail(emails: Seq[String], templateId: String, parametersJson: JsObject): Future[HttpResponse] = {
     val json = Json.obj(
-      "to" -> Seq(email),
+      "to" -> emails,
       "templateId" -> templateId,
       "parameters" -> parametersJson
     )
     val headers = Seq("Content-Type" -> "application/json")
-
+    implicit val hc: HeaderCarrier          = HeaderCarrier()
+    
     httpClientV2
       .post(sendEmailURL)
       .withBody(json)
