@@ -56,7 +56,8 @@ class EmailSenderController @Inject() (
             case `ngr_add_property_request_sent` => parseAndValidateTemplateParams[AddPropertyRequestSent]
           }
         ).map { req =>
-          EmailNotification(emailTemplate, req.trackerId, req.sendToEmails, req.templateParams, req.callbackUrl)
+          val client = request.headers.get(USER_AGENT)
+          EmailNotification(emailTemplate, req.trackerId, req.sendToEmails, req.templateParams, req.callbackUrl, client)
         }
     ) match {
       case Right(notification) => saveEmailNotification(notification)
@@ -101,7 +102,7 @@ class EmailSenderController @Inject() (
     }
     error.message + msgArgs
 
-  private def saveEmailNotification[T](emailNotification: EmailNotification): Future[Result] =
+  private def saveEmailNotification(emailNotification: EmailNotification): Future[Result] =
     logger.info(s"\nSend ${emailNotification.emailTemplateId}. TrackerId: ${emailNotification.trackerId}")
 
     emailNotificationRepo
