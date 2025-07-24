@@ -21,11 +21,9 @@ import play.api.Configuration
 
 @Singleton
 class AppConfig @Inject() (config: Configuration) {
-  val appName: String = config.get[String]("appName")
-  lazy val submissionExportEnabled = config.get[Boolean]("sendSubmission.enabled")
-  lazy val retryWindowHours = config.get[Int]("sendSubmission.retryWindowHours")
-  lazy val exportFrequency = config.get[Int]("sendSubmission.frequencySeconds")
-  lazy val exportBatchSize = config.get[Int]("sendSubmission.batchSize")
+  val appName: String                  = config.get[String]("appName")
+  val submissionExportEnabled: Boolean = config.get[Boolean]("sendSubmission.enabled")
+  val retryWindowHours: Int            = config.get[Int]("sendSubmission.retryWindowHours")
+  val exportFrequency: Int             = config.get[Int]("sendSubmission.frequencySeconds")
+  val exportBatchSize: Int             = config.get[Int]("sendSubmission.batchSize")
 }
-
-

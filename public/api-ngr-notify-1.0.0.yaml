@@ -46,6 +46,7 @@ paths:
                   sendToEmails:
                     - "test1@email.com"
                     - "test2@email.com"
+                  callbackUrl: "http://localhost:1501/ngr-stub/callback"
                   templateParams:
                     firstName: "David"
                     lastName: "Jones"
@@ -57,6 +58,7 @@ paths:
                   sendToEmails:
                     - "test1@email.com"
                     - "test2@email.com"
+                  callbackUrl: "http://localhost:1501/ngr-stub/callback"
                   templateParams:
                     firstName: "David"
                     lastName: "Jones"
