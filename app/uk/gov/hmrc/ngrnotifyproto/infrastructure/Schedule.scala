@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 HM Revenue & Customs
+ * Copyright 2023 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,23 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ngrnotifyproto.config
+package uk.gov.hmrc.ngrnotifyproto.infrastructure
+
+import uk.gov.hmrc.ngrnotifyproto.config.AppConfig
 
 import javax.inject.{Inject, Singleton}
-import play.api.Configuration
+import scala.concurrent.duration.*
+import scala.language.postfixOps
 
-@Singleton
-class AppConfig @Inject() (config: Configuration) {
-  val appName: String = config.get[String]("appName")
-  lazy val submissionExportEnabled = config.get[Boolean]("sendSubmission.enabled")
-  lazy val retryWindowHours = config.get[Int]("sendSubmission.retryWindowHours")
-  lazy val exportFrequency = config.get[Int]("sendSubmission.frequencySeconds")
-  lazy val exportBatchSize = config.get[Int]("sendSubmission.batchSize")
+trait Schedule {
+  def timeUntilNextRun(): FiniteDuration
 }
 
+trait RegularSchedule extends Schedule {
+  def timeUntilNextRun(): FiniteDuration
+}
 
+@Singleton
+class DefaultRegularSchedule @Inject() (ngrConfig: AppConfig) extends RegularSchedule {
+  override def timeUntilNextRun(): FiniteDuration = ngrConfig.exportFrequency seconds
+}
