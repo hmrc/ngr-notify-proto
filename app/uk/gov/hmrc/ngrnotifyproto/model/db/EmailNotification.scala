@@ -32,6 +32,7 @@ case class EmailNotification(
   sendToEmails: Seq[String],
   templateParams: JsObject,
   callbackUrl: Option[String],
+  client: Option[String] = None,
   _id: ObjectId = new ObjectId,
   createdAt: Instant = Instant.now
 )

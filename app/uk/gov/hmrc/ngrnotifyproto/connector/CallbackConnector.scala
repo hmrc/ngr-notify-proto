@@ -39,9 +39,10 @@ import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import uk.gov.hmrc.http.HttpReads.Implicits.*
 import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, StringContextOps}
-import uk.gov.hmrc.ngrnotifyproto.model.EmailTemplate
 import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
-import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.ngrnotifyproto.model.response.ApiFailure
+
+import uk.gov.hmrc.ngrnotifyproto.model.response.ActionCallback
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -50,52 +51,41 @@ import scala.concurrent.{ExecutionContext, Future}
   * @author Yuriy Tumakha
   */
 @Singleton
-class EmailConnector @Inject() (
-  servicesConfig: ServicesConfig,
+class CallbackConnector @Inject() (
   httpClientV2: HttpClientV2
 )(implicit
   ec: ExecutionContext
-) extends Logging {
+) extends Logging:
 
-  private val emailServiceBaseUrl = servicesConfig.baseUrl("email")
-  private val sendEmailURL        = url"$emailServiceBaseUrl/hmrc/email"
+  def callbackOnFailure(notification: EmailNotification, error: Throwable): Future[Unit] =
+    callbackOnFailure(notification, Seq(ApiFailure("ACTION_FAILED", error.getMessage)))
 
-  def sendEmailNotification(emailNotification: EmailNotification): Future[HttpResponse] =
-    val parameters      = emailNotification.templateParams
-    val emailTemplateId = emailNotification.emailTemplateId
-    val emails          = emailNotification.sendToEmails
-    sendEmail(emails, emailTemplateId, parameters)
+  def callbackOnFailure(notification: EmailNotification, code: String, reason: String): Future[Unit] =
+    callbackOnFailure(notification, Seq(ApiFailure(code, reason)))
 
-  private def sendEmail(
-    emails: Seq[String],
-    templateId: EmailTemplate,
-    parametersJson: JsObject
-  ): Future[HttpResponse] = {
-    val json    = Json.obj(
-      "to"         -> emails,
-      "templateId" -> templateId,
-      "parameters" -> parametersJson
+  def callbackOnFailure(notification: EmailNotification, failures: Seq[ApiFailure]): Future[Unit] =
+    val json = Json.toJsObject(
+      ActionCallback(notification.trackerId, notification.emailTemplateId.toString, failures)
     )
-    val headers = Seq("Content-Type" -> "application/json")
 
-    implicit val hc: HeaderCarrier = HeaderCarrier()
+    given HeaderCarrier = HeaderCarrier()
 
-    httpClientV2
-      .post(sendEmailURL)
-      .withBody(json)
-      .setHeader(headers*)
-      .execute[HttpResponse]
-      .map { res =>
-        res.status match {
-          case OK | ACCEPTED => logger.info(s"Send email to user successful: ${res.status}")
-          case _             => logger.error(s"Send email to user FAILED: ${res.status} ${res.body}")
-        }
-        res
+    notification.callbackUrl
+      .map { callbackUrl =>
+        httpClientV2
+          .post(url"$callbackUrl")
+          .withBody(json)
+          .setHeader("Content-Type" -> "application/json")
+          .execute[HttpResponse]
+          .map { res =>
+            res.status match {
+              case OK | ACCEPTED => logger.info(s"Callback successful: ${res.status}")
+              case _             => logger.error(s"Callback FAILED: ${res.status} ${res.body}")
+            }
+          }
+          .recoverWith { case e: Exception =>
+            logger.error(s"Callback FAILED: ${e.getMessage}", e)
+            Future.failed(e)
+          }
       }
-      .recoverWith { case e: Exception =>
-        logger.error(s"Send email to user FAILED: ${e.getMessage}", e)
-        Future.failed(e)
-      }
-  }
-
-}
+      .getOrElse(Future.unit)

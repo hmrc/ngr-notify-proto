@@ -25,15 +25,15 @@ import play.api.libs.json.JsValue
 import uk.gov.hmrc.ngrnotifyproto.connectors.HipConnector
 
 @Singleton()
-class HipController @Inject()(hipConnector: HipConnector,
-                              cc: ControllerComponents)(implicit executionContext: ExecutionContext) extends BackendController(cc){
+class HipController @Inject() (hipConnector: HipConnector, cc: ControllerComponents)(implicit
+  executionContext: ExecutionContext
+) extends BackendController(cc) {
 
   def hipHelloWorld(): Action[AnyContent] = Action.async { implicit request =>
-    val clientId: String = request.headers.get("Client-Id").getOrElse("")
-    val clientSecret: String = request.headers.get("Client-Secret").getOrElse("")
+    val clientId: String                              = request.headers.get("Client-Id").getOrElse("")
+    val clientSecret: String                          = request.headers.get("Client-Secret").getOrElse("")
     val eventuallyHelloWorldResponse: Future[JsValue] = hipConnector.callHelloWorld(clientId, clientSecret)
 
-    eventuallyHelloWorldResponse.map(helloWorldResponse =>
-      Ok(s"Response was: $helloWorldResponse"))
+    eventuallyHelloWorldResponse.map(helloWorldResponse => Ok(s"Response was: $helloWorldResponse"))
   }
 }

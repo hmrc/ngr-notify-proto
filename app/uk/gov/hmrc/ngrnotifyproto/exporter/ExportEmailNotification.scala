@@ -18,8 +18,9 @@ package uk.gov.hmrc.ngrnotifyproto.exporter
 
 import com.google.inject.ImplementedBy
 import play.api.Logging
+import play.api.http.Status.{ACCEPTED, OK}
 import uk.gov.hmrc.ngrnotifyproto.config.AppConfig
-import uk.gov.hmrc.ngrnotifyproto.connector.EmailConnector
+import uk.gov.hmrc.ngrnotifyproto.connector.{CallbackConnector, EmailConnector}
 import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
 import uk.gov.hmrc.ngrnotifyproto.repository.EmailNotificationRepo
 
@@ -35,12 +36,14 @@ trait ExportEmailNotification {
 
 @Singleton
 class ExportEmailNotificationVOA @Inject() (
-                                                emailNotificationRepo: EmailNotificationRepo,
-                                                clock: Clock,
-                                                emailConnector: EmailConnector,
-                                                forConfig: AppConfig
-                                              )(implicit  ec: ExecutionContext) extends ExportEmailNotification
-  with Logging {
+  emailNotificationRepo: EmailNotificationRepo,
+  clock: Clock,
+  emailConnector: EmailConnector,
+  callbackConnector: CallbackConnector,
+  forConfig: AppConfig
+)(implicit ec: ExecutionContext)
+    extends ExportEmailNotification
+    with Logging {
 
   override def exportNow(size: Int): Future[Unit] =
     emailNotificationRepo.getNotificationsBatch(size).flatMap { emailNotifications =>
@@ -52,20 +55,32 @@ class ExportEmailNotificationVOA @Inject() (
     if emailNotifications.isEmpty then Future.unit
     else processNext(emailNotifications.head).flatMap(_ => processSequentially(emailNotifications.tail))
 
-  private def processNext(emailNotification: EmailNotification)(implicit executionContext: ExecutionContext): Future[Unit] =
+  private def processNext(
+    emailNotification: EmailNotification
+  )(implicit executionContext: ExecutionContext): Future[Unit] =
     if isTooLongInQueue(emailNotification) then
       logger.warn(s"Unable to send email reached end of retry window, ref: ${emailNotification.trackerId}.")
       // TODO Audit removal from queue
       emailNotificationRepo.delete(emailNotification._id).map(_ => ())
-      Future.unit
     else
-      for (sendTO <- emailNotification.sendToEmails)
-        logger.warn(s"Found ${emailNotification.trackerId} with send to ${sendTO} notification to send email")
+      logger.warn(s"Found ${emailNotification.trackerId} notification with send to ${emailNotification.sendToEmails}")
       // TODO Audit send email
-        emailConnector.sendEmailNotification(emailNotification)
-      // TODO If Success - remove notification from the DB
-      // TODO If fail - send callback to frontend
-      Future.unit
+      emailConnector
+        .sendEmailNotification(emailNotification)
+        .flatMap { res =>
+          res.status match {
+            case OK | ACCEPTED => emailNotificationRepo.delete(emailNotification._id).map(_ => ())
+            case _             =>
+              callbackConnector.callbackOnFailure(
+                emailNotification,
+                "WRONG_RESPONSE_STATUS",
+                s"Send email to user FAILED: ${res.status} ${res.body}"
+              )
+          }
+        }
+        .recoverWith { error =>
+          callbackConnector.callbackOnFailure(emailNotification, error)
+        }
 
   private def isTooLongInQueue(emailNotification: EmailNotification): Boolean =
     emailNotification.createdAt.isBefore(Instant.now(clock).minus(forConfig.retryWindowHours, ChronoUnit.HOURS))

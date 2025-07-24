@@ -27,10 +27,10 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class HipConnector @Inject()(httpClient: HttpClientV2)(implicit ec: ExecutionContext) {
+class HipConnector @Inject() (httpClient: HttpClientV2)(implicit ec: ExecutionContext) {
   def callHelloWorld(clientId: String, clientSecret: String)(implicit headerCarrier: HeaderCarrier): Future[JsValue] = {
     val hipHelloWorldURL: URL = url"https://hip.ws.ibt.hmrc.gov.uk/demo/hello-world"
-    val authHeader: String = AuthHeaderBuilder.buildAuthHeader(clientId, clientSecret)
+    val authHeader: String    = AuthHeaderBuilder.buildAuthHeader(clientId, clientSecret)
 
     httpClient
       .get(hipHelloWorldURL)
@@ -41,5 +41,3 @@ class HipConnector @Inject()(httpClient: HttpClientV2)(implicit ec: ExecutionCon
       .execute[JsValue]
   }
 }
-
-
