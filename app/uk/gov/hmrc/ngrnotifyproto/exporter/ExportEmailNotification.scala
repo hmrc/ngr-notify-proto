@@ -24,6 +24,7 @@ import uk.gov.hmrc.ngrnotifyproto.config.{AppConfig, NGRAudit}
 import uk.gov.hmrc.ngrnotifyproto.connector.{CallbackConnector, EmailConnector}
 import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
 import uk.gov.hmrc.ngrnotifyproto.repository.EmailNotificationRepo
+import uk.gov.hmrc.ngrnotifyproto.model.EmailTemplate.*
 
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant}
@@ -70,10 +71,10 @@ class ExportEmailNotificationVOA @Inject() (
           .flatMap { res =>
             res.status match {
               case OK | ACCEPTED =>
-                auditActionSuccessful(emailNotification.trackerId.toString, emailNotification, Map(emailNotification.trackerId.toString -> "Success"))
+                auditActionSuccessful(emailNotification)
                 emailNotificationRepo.delete(emailNotification._id).map(_ => ())
               case _ =>
-                auditActionFailed(emailNotification.trackerId.toString, emailNotification, res.status.toString, res.body,  Map(emailNotification.trackerId.toString -> "Failure"))
+                auditActionFailed(emailNotification, res.status.toString, res.body)
                 callbackConnector.callbackOnFailure(
                   emailNotification,
                   "WRONG_RESPONSE_STATUS",
@@ -82,6 +83,7 @@ class ExportEmailNotificationVOA @Inject() (
             }
           }
           .recoverWith { error =>
+            auditActionFailed(emailNotification, "ACTION_FAILED", error.getMessage)
             callbackConnector.callbackOnFailure(emailNotification, error)
           }
         emailType(emailNotification)
@@ -93,52 +95,49 @@ class ExportEmailNotificationVOA @Inject() (
     emailNotification.createdAt.isBefore(Instant.now(clock).minus(forConfig.retryWindowHours, ChronoUnit.HOURS))
 
   private def emailType(emailNotification: EmailNotification): Unit =
-    emailNotification.emailTemplateId.toString match {
-      case "ngr_registration_successful" => auditSubmissionEvent("Email sent: sendRegistrationEmail", emailNotification)
-      case "ngr_add_property_request_sent" => auditSubmissionEvent("Email sent: sendPropertyLinkingEmail", emailNotification)
+    emailNotification.emailTemplateId match {
+      case `ngr_registration_successful`   => auditSubmissionEvent("Email sent: sendRegistrationEmail", emailNotification)
+      case `ngr_add_property_request_sent` => auditSubmissionEvent("Email sent: sendPropertyLinkingEmail", emailNotification)
     }
 
-
-  private def auditSubmissionEvent(eventType: String, emailNotification: EmailNotification) =
-    val json = Json.obj(
-      eventType ->
-        Json.obj(
-          "emailId" -> emailNotification.emailTemplateId,
-          "submission" -> emailNotification
-        )
-    )
-    println(json)
-
-//    audit(
-//      eventType,
-//      Json.obj(
-//        "emailId" -> emailNotification.emailTemplateId,
-//        "data"      -> emailNotification.templateParams,
-//        "result" -> emailNotification
-//      ),
-//      Map.empty[String, String]
-//    )
-
-  def auditActionSuccessful(eventType: String, emailNotification: EmailNotification, tags: Map[String, String]): Unit = {
-    val outcome = Json.obj("isSuccessful" -> true)
+  private def auditSubmissionEvent(eventType: String, emailNotification: EmailNotification): Unit =
     audit(
       eventType,
       Json.obj(
         "emailId" -> emailNotification.emailTemplateId,
-        "submission" -> emailNotification,
+        "data"      -> emailNotification.templateParams,
+        "result" -> emailNotification
+      )
+    )
+
+  def auditActionSuccessful(emailNotification: EmailNotification): Unit = {
+    val eventType =
+      emailNotification.emailTemplateId match {
+        case `ngr_registration_successful` => "sendRegistrationEmail"
+        case `ngr_add_property_request_sent` => "sendPropertyLinkingEmail"
+      }
+    val outcome = Json.obj("isSuccessful" -> true)
+    audit(
+      eventType,
+      Json.obj(
+        "trackerId" -> emailNotification.trackerId,
+        "emailId" -> emailNotification.emailTemplateId,
+        "notification" -> emailNotification,
         "outcome" -> outcome
-      ),
-      tags
+      )
     )
   }
 
   def auditActionFailed(
-                     eventType: String,
                      emailNotification: EmailNotification,
                      failureCategory: String,
-                     failureReason: String,
-                     tags: Map[String, String]
+                     failureReason: String
                    ): Unit = {
+    val eventType =
+      emailNotification.emailTemplateId match {
+        case `ngr_registration_successful` => "sendRegistrationEmail"
+        case `ngr_add_property_request_sent` => "sendPropertyLinkingEmail"
+      }
     val outcome = Json.obj(
       "isSuccessful" -> false,
       "failureCategory" -> failureCategory,
@@ -148,10 +147,9 @@ class ExportEmailNotificationVOA @Inject() (
       eventType,
       Json.obj(
         "emailId" -> emailNotification.emailTemplateId,
-        "submission" -> emailNotification,
+        "notification" -> emailNotification,
         "outcome" -> outcome
-      ),
-      tags
+      )
     )
 
 

@@ -36,14 +36,14 @@ class NGRAudit @Inject()(
 
   private val AUDIT_SOURCE = "ngr-notify"
 
-  def apply(auditType: String, detail: Map[String, String], tags: Map[String, String]): Unit = {
-    val event = DataEvent(auditSource = AUDIT_SOURCE, auditType = auditType, detail = detail, tags = tags)
+  def apply(auditType: String, detail: Map[String, String]): Unit = {
+    val event = DataEvent(auditSource = AUDIT_SOURCE, auditType = auditType, detail = detail)
     logger.debug(event.toString)
     sendEvent(event)
   }
 
-  def apply(auditType: String, json: JsObject, tags: Map[String, String]): Unit = {
-    val extendedEvent = ExtendedDataEvent(auditSource = AUDIT_SOURCE, auditType = auditType, detail = json, tags = tags)
+  def apply(auditType: String, json: JsObject): Unit = {
+    val extendedEvent = ExtendedDataEvent(auditSource = AUDIT_SOURCE, auditType = auditType, detail = json)
     logger.debug(extendedEvent.toString)
     sendExtendedEvent(extendedEvent)
   }
