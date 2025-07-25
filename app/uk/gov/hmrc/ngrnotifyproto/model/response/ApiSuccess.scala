@@ -24,4 +24,4 @@ import play.api.libs.json.{Json, OFormat}
 case class ApiSuccess(status: String, message: String)
 
 object ApiSuccess:
-  implicit val format: OFormat[ApiSuccess] = Json.format[ApiSuccess]
+  implicit val format: OFormat[ApiSuccess] = Json.format

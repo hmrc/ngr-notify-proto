@@ -24,4 +24,4 @@ import play.api.libs.json.{Json, OFormat}
 case class ApiFailure(code: String, reason: String)
 
 object ApiFailure:
-  implicit val format: OFormat[ApiFailure] = Json.format[ApiFailure]
+  implicit val format: OFormat[ApiFailure] = Json.format

@@ -29,4 +29,4 @@ case class AddPropertyRequestSent(
 )
 
 object AddPropertyRequestSent:
-  implicit val format: OFormat[AddPropertyRequestSent] = Json.format[AddPropertyRequestSent]
+  implicit val format: OFormat[AddPropertyRequestSent] = Json.format

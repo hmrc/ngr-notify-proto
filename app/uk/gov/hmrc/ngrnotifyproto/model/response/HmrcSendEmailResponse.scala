@@ -18,16 +18,10 @@ package uk.gov.hmrc.ngrnotifyproto.model.response
 
 import play.api.libs.json.{Json, OFormat}
 
-import java.util.UUID
-
 /**
   * @author Yuriy Tumakha
   */
-case class ActionCallback(
-  trackerId: UUID,
-  action: String,
-  failures: Seq[ApiFailure]
-)
+case class HmrcSendEmailResponse(message: Option[String], reason: Option[String])
 
-object ActionCallback:
-  implicit val format: OFormat[ActionCallback] = Json.format
+object HmrcSendEmailResponse:
+  implicit val format: OFormat[HmrcSendEmailResponse] = Json.format
