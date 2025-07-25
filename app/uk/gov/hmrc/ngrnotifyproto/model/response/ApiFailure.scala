@@ -17,11 +17,12 @@
 package uk.gov.hmrc.ngrnotifyproto.model.response
 
 import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.ngrnotifyproto.model.ErrorCode
 
 /**
   * @author Yuriy Tumakha
   */
-case class ApiFailure(code: String, reason: String)
+case class ApiFailure(code: ErrorCode, reason: String)
 
 object ApiFailure:
-  implicit val format: OFormat[ApiFailure] = Json.format[ApiFailure]
+  implicit val format: OFormat[ApiFailure] = Json.format

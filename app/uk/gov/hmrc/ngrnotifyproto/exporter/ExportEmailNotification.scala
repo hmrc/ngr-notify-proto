@@ -18,16 +18,20 @@ package uk.gov.hmrc.ngrnotifyproto.exporter
 
 import com.google.inject.ImplementedBy
 import play.api.Logging
-import play.api.http.Status.{ACCEPTED, OK}
+import play.api.http.Status.{ACCEPTED, BAD_REQUEST, OK}
+import play.api.libs.json.Json
 import uk.gov.hmrc.ngrnotifyproto.config.AppConfig
 import uk.gov.hmrc.ngrnotifyproto.connector.{CallbackConnector, EmailConnector}
+import uk.gov.hmrc.ngrnotifyproto.model.ErrorCode.*
 import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
+import uk.gov.hmrc.ngrnotifyproto.model.response.HmrcSendEmailResponse
 import uk.gov.hmrc.ngrnotifyproto.repository.EmailNotificationRepo
 
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @ImplementedBy(classOf[ExportEmailNotificationVOA])
 trait ExportEmailNotification {
@@ -69,11 +73,14 @@ class ExportEmailNotificationVOA @Inject() (
         .sendEmailNotification(emailNotification)
         .flatMap { res =>
           res.status match {
-            case OK | ACCEPTED => emailNotificationRepo.delete(emailNotification._id).map(_ => ())
+            case OK | ACCEPTED =>
+              emailNotificationRepo.delete(emailNotification._id).map(_ => ())
+            case BAD_REQUEST   =>
+              callbackConnector.callbackOnFailure(emailNotification, BAD_REQUEST_BODY, parseBadRequest(res.body))
             case _             =>
               callbackConnector.callbackOnFailure(
                 emailNotification,
-                "WRONG_RESPONSE_STATUS",
+                WRONG_RESPONSE_STATUS,
                 s"Send email to user FAILED: ${res.status} ${res.body}"
               )
           }
@@ -81,6 +88,12 @@ class ExportEmailNotificationVOA @Inject() (
         .recoverWith { error =>
           callbackConnector.callbackOnFailure(emailNotification, error)
         }
+
+  private def parseBadRequest(body: String): String =
+    Try {
+      val hmrcResponse = Json.parse(body).as[HmrcSendEmailResponse]
+      Seq(hmrcResponse.message, hmrcResponse.reason).flatten.mkString(". ")
+    }.getOrElse(body)
 
   private def isTooLongInQueue(emailNotification: EmailNotification): Boolean =
     emailNotification.createdAt.isBefore(Instant.now(clock).minus(forConfig.retryWindowHours, ChronoUnit.HOURS))

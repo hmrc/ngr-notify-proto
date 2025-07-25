@@ -14,20 +14,21 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.ngrnotifyproto.model.response
+package uk.gov.hmrc.ngrnotifyproto.model
 
-import play.api.libs.json.{Json, OFormat}
-
-import java.util.UUID
+import play.api.libs.json.Format
 
 /**
   * @author Yuriy Tumakha
   */
-case class ActionCallback(
-  trackerId: UUID,
-  action: String,
-  failures: Seq[ApiFailure]
-)
+enum ErrorCode:
+  case ACTION_FAILED,
+    BAD_REQUEST_BODY,
+    EMAIL_TEMPLATE_NOT_FOUND,
+    JSON_VALIDATION_ERROR,
+    MONGO_DB_ERROR,
+    WRONG_RESPONSE_STATUS
+end ErrorCode
 
-object ActionCallback:
-  implicit val format: OFormat[ActionCallback] = Json.format
+object ErrorCode:
+  implicit val format: Format[ErrorCode] = Scala3EnumJsonFormat.format
