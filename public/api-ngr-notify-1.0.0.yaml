@@ -82,8 +82,8 @@ paths:
             Bad Request
             ```
             "code"                        "reason"
-            EMAIL_TEMPLATE_NOT_FOUND      Wrong email template id is used
-            MISSED_PARAMETER              Submission has not passed validation - missed parameter.
+            EMAIL_TEMPLATE_NOT_FOUND      Wrong email template id is used.
+            BAD_REQUEST_BODY              Request body has not passed validation.
             JSON_VALIDATION_ERROR         Indicates that one or more errors occurred during the validation of the JSON payload.
             MONGO_DB_ERROR                Indicates an error related to operations performed on the MongoDB database.
           content:

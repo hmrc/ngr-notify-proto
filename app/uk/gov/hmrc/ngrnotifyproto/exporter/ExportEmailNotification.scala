@@ -22,6 +22,7 @@ import play.api.http.Status.{ACCEPTED, BAD_REQUEST, OK}
 import play.api.libs.json.Json
 import uk.gov.hmrc.ngrnotifyproto.config.AppConfig
 import uk.gov.hmrc.ngrnotifyproto.connector.{CallbackConnector, EmailConnector}
+import uk.gov.hmrc.ngrnotifyproto.model.ErrorCode.*
 import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
 import uk.gov.hmrc.ngrnotifyproto.model.response.HmrcSendEmailResponse
 import uk.gov.hmrc.ngrnotifyproto.repository.EmailNotificationRepo
@@ -75,11 +76,11 @@ class ExportEmailNotificationVOA @Inject() (
             case OK | ACCEPTED =>
               emailNotificationRepo.delete(emailNotification._id).map(_ => ())
             case BAD_REQUEST   =>
-              callbackConnector.callbackOnFailure(emailNotification, "BAD_REQUEST", parseBadRequest(res.body))
+              callbackConnector.callbackOnFailure(emailNotification, BAD_REQUEST_BODY, parseBadRequest(res.body))
             case _             =>
               callbackConnector.callbackOnFailure(
                 emailNotification,
-                "WRONG_RESPONSE_STATUS",
+                WRONG_RESPONSE_STATUS,
                 s"Send email to user FAILED: ${res.status} ${res.body}"
               )
           }
