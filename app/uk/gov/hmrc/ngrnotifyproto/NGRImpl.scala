@@ -29,7 +29,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class NGRImpl @Inject()(
+class NGRImpl @Inject() (
   actorSystem: ActorSystem,
   appConfig: AppConfig,
   audit: NGRAudit,

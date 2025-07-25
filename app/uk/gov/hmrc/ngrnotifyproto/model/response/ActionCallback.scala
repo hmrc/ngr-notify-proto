@@ -21,13 +21,13 @@ import play.api.libs.json.{Json, OFormat}
 import java.util.UUID
 
 /**
- * @author Yuriy Tumakha
- */
+  * @author Yuriy Tumakha
+  */
 case class ActionCallback(
-                           trackerId: UUID,
-                           action: String,
-                           failures: Seq[ApiFailure]
-                         )
+  trackerId: UUID,
+  action: String,
+  failures: Seq[ApiFailure]
+)
 
 object ActionCallback:
   implicit val format: OFormat[ActionCallback] = Json.format[ActionCallback]

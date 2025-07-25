@@ -37,8 +37,7 @@ trait ExportEmailNotification {
 }
 
 @Singleton
-class ExportEmailNotificationVOA @Inject() (
-                                                emailNotificationRepo: EmailNotificationRepo,
+class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNotificationRepo,
                                                 clock: Clock,
                                                 audit: NGRAudit,
                                                 emailConnector: EmailConnector,
@@ -57,12 +56,13 @@ class ExportEmailNotificationVOA @Inject() (
     if emailNotifications.isEmpty then Future.unit
     else processNext(emailNotifications.head).flatMap(_ => processSequentially(emailNotifications.tail))
 
-  private def processNext(emailNotification: EmailNotification)(implicit executionContext: ExecutionContext): Future[Unit] =
+  private def processNext(
+    emailNotification: EmailNotification
+  )(implicit executionContext: ExecutionContext): Future[Unit] =
     if isTooLongInQueue(emailNotification) then
       logger.warn(s"Unable to send email reached end of retry window, ref: ${emailNotification.trackerId}.")
       // TODO Audit removal from queue
       emailNotificationRepo.delete(emailNotification._id).map(_ => ())
-      Future.unit
     else
       for (sendTO <- emailNotification.sendToEmails)
         logger.warn(s"Found ${emailNotification.trackerId} with send to ${sendTO} notification to send email")
@@ -88,8 +88,6 @@ class ExportEmailNotificationVOA @Inject() (
           }
         emailType(emailNotification)
       Future.unit
-
-
 
   private def isTooLongInQueue(emailNotification: EmailNotification): Boolean =
     emailNotification.createdAt.isBefore(Instant.now(clock).minus(forConfig.retryWindowHours, ChronoUnit.HOURS))

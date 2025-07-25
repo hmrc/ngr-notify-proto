@@ -48,14 +48,14 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
- * @author Yuriy Tumakha
- */
+  * @author Yuriy Tumakha
+  */
 @Singleton
 class CallbackConnector @Inject() (
-                                    httpClientV2: HttpClientV2
-                                  )(implicit
-                                    ec: ExecutionContext
-                                  ) extends Logging:
+  httpClientV2: HttpClientV2
+)(implicit
+  ec: ExecutionContext
+) extends Logging:
 
   def callbackOnFailure(notification: EmailNotification, error: Throwable): Future[Unit] =
     callbackOnFailure(notification, Seq(ApiFailure("ACTION_FAILED", error.getMessage)))
