@@ -20,12 +20,13 @@ import com.google.inject.ImplementedBy
 import play.api.Logging
 import play.api.http.Status.{ACCEPTED, BAD_REQUEST, OK}
 import play.api.libs.json.Json
-import uk.gov.hmrc.ngrnotifyproto.config.AppConfig
+import uk.gov.hmrc.ngrnotifyproto.config.{AppConfig, NGRAudit}
 import uk.gov.hmrc.ngrnotifyproto.connector.{CallbackConnector, EmailConnector}
 import uk.gov.hmrc.ngrnotifyproto.model.ErrorCode.*
 import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
 import uk.gov.hmrc.ngrnotifyproto.model.response.HmrcSendEmailResponse
 import uk.gov.hmrc.ngrnotifyproto.repository.EmailNotificationRepo
+import uk.gov.hmrc.ngrnotifyproto.model.EmailTemplate.*
 
 import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant}
@@ -39,15 +40,14 @@ trait ExportEmailNotification {
 }
 
 @Singleton
-class ExportEmailNotificationVOA @Inject() (
-  emailNotificationRepo: EmailNotificationRepo,
-  clock: Clock,
-  emailConnector: EmailConnector,
-  callbackConnector: CallbackConnector,
-  forConfig: AppConfig
-)(implicit ec: ExecutionContext)
-    extends ExportEmailNotification
-    with Logging {
+class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNotificationRepo,
+                                                clock: Clock,
+                                                audit: NGRAudit,
+                                                emailConnector: EmailConnector,
+                                                callbackConnector: CallbackConnector,
+                                                forConfig: AppConfig
+                                              )(implicit  ec: ExecutionContext) extends ExportEmailNotification
+  with Logging {
 
   override def exportNow(size: Int): Future[Unit] =
     emailNotificationRepo.getNotificationsBatch(size).flatMap { emailNotifications =>
@@ -68,26 +68,31 @@ class ExportEmailNotificationVOA @Inject() (
       emailNotificationRepo.delete(emailNotification._id).map(_ => ())
     else
       logger.warn(s"Found ${emailNotification.trackerId} notification with send to ${emailNotification.sendToEmails}")
-      // TODO Audit send email
       emailConnector
-        .sendEmailNotification(emailNotification)
-        .flatMap { res =>
-          res.status match {
-            case OK | ACCEPTED =>
-              emailNotificationRepo.delete(emailNotification._id).map(_ => ())
-            case BAD_REQUEST   =>
-              callbackConnector.callbackOnFailure(emailNotification, BAD_REQUEST_BODY, parseBadRequest(res.body))
-            case _             =>
-              callbackConnector.callbackOnFailure(
-                emailNotification,
-                WRONG_RESPONSE_STATUS,
-                s"Send email to user FAILED: ${res.status} ${res.body}"
-              )
+          .sendEmailNotification(emailNotification)
+          .flatMap { res =>
+            res.status match {
+              case OK | ACCEPTED =>
+                auditActionSuccessful(emailNotification)
+                emailNotificationRepo.delete(emailNotification._id).map(_ => ())
+              case BAD_REQUEST   =>
+                auditActionFailed(emailNotification, BAD_REQUEST_BODY.toString, parseBadRequest(res.body))
+                callbackConnector.callbackOnFailure(emailNotification, BAD_REQUEST_BODY, parseBadRequest(res.body))
+              case _ =>
+                auditActionFailed(emailNotification, res.status.toString, res.body)
+                callbackConnector.callbackOnFailure(
+                  emailNotification,
+                  WRONG_RESPONSE_STATUS,
+                  s"Send email to user FAILED: ${res.status} ${res.body}"
+                )
+            }
           }
-        }
-        .recoverWith { error =>
-          callbackConnector.callbackOnFailure(emailNotification, error)
-        }
+          .recoverWith { error =>
+            auditActionFailed(emailNotification, "ACTION_FAILED", error.getMessage)
+            callbackConnector.callbackOnFailure(emailNotification, error)
+          }
+        emailType(emailNotification)
+        Future.unit
 
   private def parseBadRequest(body: String): String =
     Try {
@@ -98,4 +103,59 @@ class ExportEmailNotificationVOA @Inject() (
   private def isTooLongInQueue(emailNotification: EmailNotification): Boolean =
     emailNotification.createdAt.isBefore(Instant.now(clock).minus(forConfig.retryWindowHours, ChronoUnit.HOURS))
 
+  private def emailType(emailNotification: EmailNotification): Unit =
+    emailNotification.emailTemplateId match {
+      case `ngr_registration_successful`   => auditSubmissionEvent("Email sent: sendRegistrationEmail", emailNotification)
+      case `ngr_add_property_request_sent` => auditSubmissionEvent("Email sent: sendPropertyLinkingEmail", emailNotification)
+    }
+
+  def eventType(emailNotification: EmailNotification): String =
+    emailNotification.emailTemplateId match {
+      case `ngr_registration_successful` => "sendRegistrationEmail"
+      case `ngr_add_property_request_sent` => "sendPropertyLinkingEmail"
+    }
+
+  private def auditSubmissionEvent(eventType: String, emailNotification: EmailNotification): Unit =
+    audit(
+      eventType,
+      Json.obj(
+        "emailId" -> emailNotification.emailTemplateId,
+        "data"      -> emailNotification.templateParams,
+        "result" -> emailNotification
+      )
+    )
+
+  def auditActionSuccessful(emailNotification: EmailNotification): Unit = {
+    val outcome = Json.obj("isSuccessful" -> true)
+    audit(
+      eventType(emailNotification),
+      Json.obj(
+        "emailId" -> emailNotification.emailTemplateId,
+        "notification" -> emailNotification,
+        "outcome" -> outcome
+      )
+    )
+  }
+
+  def auditActionFailed(
+                     emailNotification: EmailNotification,
+                     failureCategory: String,
+                     failureReason: String
+                   ): Unit = {
+    val outcome = Json.obj(
+      "isSuccessful" -> false,
+      "failureCategory" -> failureCategory,
+      "failureReason" -> failureReason
+    )
+    audit(
+      eventType(emailNotification),
+      Json.obj(
+        "emailId" -> emailNotification.emailTemplateId,
+        "notification" -> emailNotification,
+        "outcome" -> outcome
+      )
+    )
+
+
+  }
 }

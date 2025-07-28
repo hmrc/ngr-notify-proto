@@ -18,7 +18,7 @@ package uk.gov.hmrc.ngrnotifyproto
 
 import org.apache.pekko.actor.ActorSystem
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
-import uk.gov.hmrc.ngrnotifyproto.config.AppConfig
+import uk.gov.hmrc.ngrnotifyproto.config.{AppConfig, NGRAudit}
 import uk.gov.hmrc.ngrnotifyproto.connector.{CallbackConnector, EmailConnector}
 import uk.gov.hmrc.ngrnotifyproto.infrastructure.RegularSchedule
 import uk.gov.hmrc.ngrnotifyproto.repository.EmailNotificationRepo
@@ -32,6 +32,7 @@ import scala.concurrent.ExecutionContext
 class NGRImpl @Inject() (
   actorSystem: ActorSystem,
   appConfig: AppConfig,
+  audit: NGRAudit,
   systemClock: Clock,
   emailConnector: EmailConnector,
   callbackConnector: CallbackConnector,
@@ -44,8 +45,7 @@ class NGRImpl @Inject() (
   import appConfig.*
 
   if submissionExportEnabled then
-    val exporter =
-      new ExportEmailNotificationVOA(emailNotificationRepo, systemClock, emailConnector, callbackConnector, appConfig)
+    val exporter = new ExportEmailNotificationVOA(emailNotificationRepo, systemClock, audit, emailConnector, callbackConnector, appConfig)
     new SendEmailExporter(
       mongoLockRepository,
       exporter,
