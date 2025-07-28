@@ -67,7 +67,8 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
       // TODO Audit removal from queue
       emailNotificationRepo.delete(emailNotification._id).map(_ => ())
     else
-      logger.warn(s"Found ${emailNotification.trackerId} notification with send to ${emailNotification.sendToEmails}")        emailConnector
+      logger.warn(s"Found ${emailNotification.trackerId} notification with send to ${emailNotification.sendToEmails}")
+      emailConnector
           .sendEmailNotification(emailNotification)
           .flatMap { res =>
             res.status match {
@@ -127,9 +128,8 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
   def auditActionSuccessful(emailNotification: EmailNotification): Unit = {
     val outcome = Json.obj("isSuccessful" -> true)
     audit(
-      eventType,
+      eventType(emailNotification),
       Json.obj(
-        "trackerId" -> emailNotification.trackerId,
         "emailId" -> emailNotification.emailTemplateId,
         "notification" -> emailNotification,
         "outcome" -> outcome
@@ -148,7 +148,7 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
       "failureReason" -> failureReason
     )
     audit(
-      eventType,
+      eventType(emailNotification),
       Json.obj(
         "emailId" -> emailNotification.emailTemplateId,
         "notification" -> emailNotification,
