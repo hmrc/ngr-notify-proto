@@ -67,8 +67,7 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
       // TODO Audit removal from queue
       emailNotificationRepo.delete(emailNotification._id).map(_ => ())
     else
-        logger.warn(s"Found ${emailNotification.trackerId} with send to ${sendTO} notification to send email")
-        emailConnector
+      logger.warn(s"Found ${emailNotification.trackerId} notification with send to ${emailNotification.sendToEmails}")        emailConnector
           .sendEmailNotification(emailNotification)
           .flatMap { res =>
             res.status match {
@@ -92,7 +91,7 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
             callbackConnector.callbackOnFailure(emailNotification, error)
           }
         emailType(emailNotification)
-      Future.unit
+        Future.unit
 
   private def parseBadRequest(body: String): String =
     Try {
@@ -109,8 +108,8 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
       case `ngr_add_property_request_sent` => auditSubmissionEvent("Email sent: sendPropertyLinkingEmail", emailNotification)
     }
 
-  def eventType(emailTemplateId: EmailTemplate): String =
-    emailTemplateId match {
+  def eventType(emailNotification: EmailNotification): String =
+    emailNotification.emailTemplateId match {
       case `ngr_registration_successful` => "sendRegistrationEmail"
       case `ngr_add_property_request_sent` => "sendPropertyLinkingEmail"
     }
