@@ -67,7 +67,6 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
       // TODO Audit removal from queue
       emailNotificationRepo.delete(emailNotification._id).map(_ => ())
     else
-      for (sendTO <- emailNotification.sendToEmails)
         logger.warn(s"Found ${emailNotification.trackerId} with send to ${sendTO} notification to send email")
         emailConnector
           .sendEmailNotification(emailNotification)
@@ -77,6 +76,7 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
                 auditActionSuccessful(emailNotification)
                 emailNotificationRepo.delete(emailNotification._id).map(_ => ())
               case BAD_REQUEST   =>
+                auditActionFailed(emailNotification, BAD_REQUEST_BODY.toString, parseBadRequest(res.body))
                 callbackConnector.callbackOnFailure(emailNotification, BAD_REQUEST_BODY, parseBadRequest(res.body))
               case _ =>
                 auditActionFailed(emailNotification, res.status.toString, res.body)
@@ -109,6 +109,12 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
       case `ngr_add_property_request_sent` => auditSubmissionEvent("Email sent: sendPropertyLinkingEmail", emailNotification)
     }
 
+  def eventType(emailTemplateId: EmailTemplate): String =
+    emailTemplateId match {
+      case `ngr_registration_successful` => "sendRegistrationEmail"
+      case `ngr_add_property_request_sent` => "sendPropertyLinkingEmail"
+    }
+
   private def auditSubmissionEvent(eventType: String, emailNotification: EmailNotification): Unit =
     audit(
       eventType,
@@ -120,11 +126,6 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
     )
 
   def auditActionSuccessful(emailNotification: EmailNotification): Unit = {
-    val eventType =
-      emailNotification.emailTemplateId match {
-        case `ngr_registration_successful` => "sendRegistrationEmail"
-        case `ngr_add_property_request_sent` => "sendPropertyLinkingEmail"
-      }
     val outcome = Json.obj("isSuccessful" -> true)
     audit(
       eventType,
@@ -142,11 +143,6 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
                      failureCategory: String,
                      failureReason: String
                    ): Unit = {
-    val eventType =
-      emailNotification.emailTemplateId match {
-        case `ngr_registration_successful` => "sendRegistrationEmail"
-        case `ngr_add_property_request_sent` => "sendPropertyLinkingEmail"
-      }
     val outcome = Json.obj(
       "isSuccessful" -> false,
       "failureCategory" -> failureCategory,
