@@ -31,4 +31,4 @@ case class SendEmailRequest(
 )
 
 object SendEmailRequest:
-  implicit val format: OFormat[SendEmailRequest] = Json.format[SendEmailRequest]
+  implicit val format: OFormat[SendEmailRequest] = Json.format

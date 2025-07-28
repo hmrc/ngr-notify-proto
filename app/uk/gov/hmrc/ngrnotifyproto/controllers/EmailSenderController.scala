@@ -21,6 +21,8 @@ import play.api.libs.json.*
 import play.api.mvc.{Action, ControllerComponents, Request, Result}
 import uk.gov.hmrc.ngrnotifyproto.model.EmailTemplate
 import uk.gov.hmrc.ngrnotifyproto.model.EmailTemplate.*
+import uk.gov.hmrc.ngrnotifyproto.model.ErrorCode
+import uk.gov.hmrc.ngrnotifyproto.model.ErrorCode.*
 import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
 import uk.gov.hmrc.ngrnotifyproto.model.email.*
 import uk.gov.hmrc.ngrnotifyproto.model.request.SendEmailRequest
@@ -48,7 +50,7 @@ class EmailSenderController @Inject() (
 
   def sendEmail(emailTemplateId: String): Action[JsValue] = Action.async(parse.json) { implicit request =>
     Try(EmailTemplate.valueOf(emailTemplateId)).toEither.fold(
-      error => Left(BadRequest(buildFailureResponse("EMAIL_TEMPLATE_NOT_FOUND", error.getMessage))),
+      error => Left(BadRequest(buildFailureResponse(EMAIL_TEMPLATE_NOT_FOUND, error.getMessage))),
       emailTemplate =>
         (
           emailTemplate match {
@@ -81,7 +83,7 @@ class EmailSenderController @Inject() (
       }
     )
 
-  private def buildFailureResponse(code: String, reason: String): JsValue =
+  private def buildFailureResponse(code: ErrorCode, reason: String): JsValue =
     Json.toJson(Seq(ApiFailure(code, reason)))
 
   private def buildValidationErrorsResponse[T](
@@ -89,7 +91,7 @@ class EmailSenderController @Inject() (
   ): Either[Result, T] =
     val failures = errors.map { case (jsPath, jsonErrors) =>
       ApiFailure(
-        "JSON_VALIDATION_ERROR",
+        JSON_VALIDATION_ERROR,
         s"$jsPath <- ${jsonErrors.map(printValidationError).mkString(" | ")}"
       )
     }
@@ -113,5 +115,5 @@ class EmailSenderController @Inject() (
       }
       .recover { error =>
         logger.error(s"Error on save to Mongo. TrackerId: ${emailNotification.trackerId}", error)
-        InternalServerError(buildFailureResponse("MONGO_DB_ERROR", error.getMessage))
+        InternalServerError(buildFailureResponse(MONGO_DB_ERROR, error.getMessage))
       }

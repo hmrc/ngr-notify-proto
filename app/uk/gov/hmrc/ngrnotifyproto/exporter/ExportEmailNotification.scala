@@ -18,11 +18,13 @@ package uk.gov.hmrc.ngrnotifyproto.exporter
 
 import com.google.inject.ImplementedBy
 import play.api.Logging
-import play.api.http.Status.{ACCEPTED, OK}
+import play.api.http.Status.{ACCEPTED, BAD_REQUEST, OK}
 import play.api.libs.json.Json
 import uk.gov.hmrc.ngrnotifyproto.config.{AppConfig, NGRAudit}
 import uk.gov.hmrc.ngrnotifyproto.connector.{CallbackConnector, EmailConnector}
+import uk.gov.hmrc.ngrnotifyproto.model.ErrorCode.*
 import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
+import uk.gov.hmrc.ngrnotifyproto.model.response.HmrcSendEmailResponse
 import uk.gov.hmrc.ngrnotifyproto.repository.EmailNotificationRepo
 import uk.gov.hmrc.ngrnotifyproto.model.EmailTemplate.*
 
@@ -30,6 +32,7 @@ import java.time.temporal.ChronoUnit
 import java.time.{Clock, Instant}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.Try
 
 @ImplementedBy(classOf[ExportEmailNotificationVOA])
 trait ExportEmailNotification {
@@ -73,6 +76,8 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
               case OK | ACCEPTED =>
                 auditActionSuccessful(emailNotification)
                 emailNotificationRepo.delete(emailNotification._id).map(_ => ())
+              case BAD_REQUEST   =>
+                callbackConnector.callbackOnFailure(emailNotification, BAD_REQUEST_BODY, parseBadRequest(res.body))
               case _ =>
                 auditActionFailed(emailNotification, res.status.toString, res.body)
                 callbackConnector.callbackOnFailure(
@@ -88,6 +93,12 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
           }
         emailType(emailNotification)
       Future.unit
+
+  private def parseBadRequest(body: String): String =
+    Try {
+      val hmrcResponse = Json.parse(body).as[HmrcSendEmailResponse]
+      Seq(hmrcResponse.message, hmrcResponse.reason).flatten.mkString(". ")
+    }.getOrElse(body)
 
   private def isTooLongInQueue(emailNotification: EmailNotification): Boolean =
     emailNotification.createdAt.isBefore(Instant.now(clock).minus(forConfig.retryWindowHours, ChronoUnit.HOURS))

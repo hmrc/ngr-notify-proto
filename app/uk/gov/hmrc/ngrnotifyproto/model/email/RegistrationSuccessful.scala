@@ -24,4 +24,4 @@ import play.api.libs.json.{JsObject, Json, OFormat}
 case class RegistrationSuccessful(firstName: String, lastName: String, reference: String)
 
 object RegistrationSuccessful:
-  implicit val format: OFormat[RegistrationSuccessful] = Json.format[RegistrationSuccessful]
+  implicit val format: OFormat[RegistrationSuccessful] = Json.format
