@@ -82,7 +82,7 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
                 auditActionFailed(emailNotification, res.status.toString, res.body)
                 callbackConnector.callbackOnFailure(
                   emailNotification,
-                  "WRONG_RESPONSE_STATUS",
+                  WRONG_RESPONSE_STATUS,
                   s"Send email to user FAILED: ${res.status} ${res.body}"
                 )
             }
