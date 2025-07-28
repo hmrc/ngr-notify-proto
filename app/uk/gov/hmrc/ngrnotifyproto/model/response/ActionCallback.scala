@@ -30,4 +30,4 @@ case class ActionCallback(
 )
 
 object ActionCallback:
-  implicit val format: OFormat[ActionCallback] = Json.format[ActionCallback]
+  implicit val format: OFormat[ActionCallback] = Json.format
