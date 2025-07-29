@@ -40,14 +40,16 @@ trait ExportEmailNotification {
 }
 
 @Singleton
-class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNotificationRepo,
-                                                clock: Clock,
-                                                audit: NGRAudit,
-                                                emailConnector: EmailConnector,
-                                                callbackConnector: CallbackConnector,
-                                                forConfig: AppConfig
-                                              )(implicit  ec: ExecutionContext) extends ExportEmailNotification
-  with Logging {
+class ExportEmailNotificationVOA @Inject() (
+  emailNotificationRepo: EmailNotificationRepo,
+  clock: Clock,
+  audit: NGRAudit,
+  emailConnector: EmailConnector,
+  callbackConnector: CallbackConnector,
+  forConfig: AppConfig
+)(implicit ec: ExecutionContext)
+    extends ExportEmailNotification
+    with Logging {
 
   override def exportNow(size: Int): Future[Unit] =
     emailNotificationRepo.getNotificationsBatch(size).flatMap { emailNotifications =>
@@ -69,30 +71,36 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
     else
       logger.warn(s"Found ${emailNotification.trackerId} notification with send to ${emailNotification.sendToEmails}")
       emailConnector
-          .sendEmailNotification(emailNotification)
-          .flatMap { res =>
-            res.status match {
-              case OK | ACCEPTED =>
-                auditActionSuccessful(emailNotification)
-                emailNotificationRepo.delete(emailNotification._id).map(_ => ())
-              case BAD_REQUEST   =>
-                auditActionFailed(emailNotification, BAD_REQUEST_BODY.toString, parseBadRequest(res.body))
-                callbackConnector.callbackOnFailure(emailNotification, BAD_REQUEST_BODY, parseBadRequest(res.body))
-              case _ =>
-                auditActionFailed(emailNotification, res.status.toString, res.body)
-                callbackConnector.callbackOnFailure(
-                  emailNotification,
-                  WRONG_RESPONSE_STATUS,
-                  s"Send email to user FAILED: ${res.status} ${res.body}"
-                )
-            }
+        .sendEmailNotification(emailNotification)
+        .flatMap { res =>
+          res.status match {
+            case OK | ACCEPTED =>
+              auditActionSuccessful(emailNotification)
+              emailNotificationRepo.delete(emailNotification._id).map(_ => ())
+            case BAD_REQUEST   =>
+              auditActionFailed(emailNotification, BAD_REQUEST_BODY.toString, parseBadRequest(res.body))
+              callbackConnector.callbackOnFailure(
+                emailNotification,
+                BAD_REQUEST,
+                BAD_REQUEST_BODY,
+                parseBadRequest(res.body)
+              )
+            case _             =>
+              auditActionFailed(emailNotification, res.status.toString, res.body)
+              callbackConnector.callbackOnFailure(
+                emailNotification,
+                res.status,
+                WRONG_RESPONSE_STATUS,
+                s"Send email to user FAILED: ${res.status} ${res.body}"
+              )
           }
-          .recoverWith { error =>
-            auditActionFailed(emailNotification, "ACTION_FAILED", error.getMessage)
-            callbackConnector.callbackOnFailure(emailNotification, error)
-          }
-        emailType(emailNotification)
-        Future.unit
+        }
+        .recoverWith { error =>
+          auditActionFailed(emailNotification, ACTION_FAILED.toString, error.getMessage)
+          callbackConnector.callbackOnFailure(emailNotification, error)
+        }
+      emailType(emailNotification)
+      Future.unit
 
   private def parseBadRequest(body: String): String =
     Try {
@@ -106,12 +114,13 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
   private def emailType(emailNotification: EmailNotification): Unit =
     emailNotification.emailTemplateId match {
       case `ngr_registration_successful`   => auditSubmissionEvent("Email sent: sendRegistrationEmail", emailNotification)
-      case `ngr_add_property_request_sent` => auditSubmissionEvent("Email sent: sendPropertyLinkingEmail", emailNotification)
+      case `ngr_add_property_request_sent` =>
+        auditSubmissionEvent("Email sent: sendPropertyLinkingEmail", emailNotification)
     }
 
   def eventType(emailNotification: EmailNotification): String =
     emailNotification.emailTemplateId match {
-      case `ngr_registration_successful` => "sendRegistrationEmail"
+      case `ngr_registration_successful`   => "sendRegistrationEmail"
       case `ngr_add_property_request_sent` => "sendPropertyLinkingEmail"
     }
 
@@ -120,8 +129,8 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
       eventType,
       Json.obj(
         "emailId" -> emailNotification.emailTemplateId,
-        "data"      -> emailNotification.templateParams,
-        "result" -> emailNotification
+        "data"    -> emailNotification.templateParams,
+        "result"  -> emailNotification
       )
     )
 
@@ -130,32 +139,31 @@ class ExportEmailNotificationVOA @Inject() (    emailNotificationRepo: EmailNoti
     audit(
       eventType(emailNotification),
       Json.obj(
-        "emailId" -> emailNotification.emailTemplateId,
+        "emailId"      -> emailNotification.emailTemplateId,
         "notification" -> emailNotification,
-        "outcome" -> outcome
+        "outcome"      -> outcome
       )
     )
   }
 
   def auditActionFailed(
-                     emailNotification: EmailNotification,
-                     failureCategory: String,
-                     failureReason: String
-                   ): Unit = {
+    emailNotification: EmailNotification,
+    failureCategory: String,
+    failureReason: String
+  ): Unit = {
     val outcome = Json.obj(
-      "isSuccessful" -> false,
+      "isSuccessful"    -> false,
       "failureCategory" -> failureCategory,
-      "failureReason" -> failureReason
+      "failureReason"   -> failureReason
     )
     audit(
       eventType(emailNotification),
       Json.obj(
-        "emailId" -> emailNotification.emailTemplateId,
+        "emailId"      -> emailNotification.emailTemplateId,
         "notification" -> emailNotification,
-        "outcome" -> outcome
+        "outcome"      -> outcome
       )
     )
-
 
   }
 }

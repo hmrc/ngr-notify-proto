@@ -33,7 +33,7 @@
 package uk.gov.hmrc.ngrnotifyproto.connector
 
 import play.api.Logging
-import play.api.http.Status.{ACCEPTED, OK}
+import play.api.http.Status.{ACCEPTED, INTERNAL_SERVER_ERROR, OK}
 import play.api.libs.json.{JsObject, Json}
 import play.api.libs.ws.JsonBodyWritables.writeableOf_JsValue
 import uk.gov.hmrc.http.HttpReads.Implicits.*
@@ -42,7 +42,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, StringContextOp
 import uk.gov.hmrc.ngrnotifyproto.model.ErrorCode
 import uk.gov.hmrc.ngrnotifyproto.model.ErrorCode.*
 import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
-import uk.gov.hmrc.ngrnotifyproto.model.response.{ActionCallback, ApiFailure}
+import uk.gov.hmrc.ngrnotifyproto.model.response.ActionCallback
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -58,14 +58,11 @@ class CallbackConnector @Inject() (
 ) extends Logging:
 
   def callbackOnFailure(notification: EmailNotification, error: Throwable): Future[Unit] =
-    callbackOnFailure(notification, Seq(ApiFailure(ACTION_FAILED, error.getMessage)))
+    callbackOnFailure(notification, INTERNAL_SERVER_ERROR, ACTION_FAILED, error.getMessage)
 
-  def callbackOnFailure(notification: EmailNotification, code: ErrorCode, reason: String): Future[Unit] =
-    callbackOnFailure(notification, Seq(ApiFailure(code, reason)))
-
-  def callbackOnFailure(notification: EmailNotification, failures: Seq[ApiFailure]): Future[Unit] =
+  def callbackOnFailure(notification: EmailNotification, status: Int, code: ErrorCode, message: String): Future[Unit] =
     val json = Json.toJsObject(
-      ActionCallback(notification.trackerId, notification.emailTemplateId.toString, failures)
+      ActionCallback(notification.trackerId, notification.emailTemplateId.toString, status, code, message)
     )
 
     given HeaderCarrier = HeaderCarrier()
