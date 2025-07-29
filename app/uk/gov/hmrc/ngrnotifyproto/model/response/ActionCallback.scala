@@ -17,7 +17,6 @@
 package uk.gov.hmrc.ngrnotifyproto.model.response
 
 import play.api.libs.json.{Json, OFormat}
-import uk.gov.hmrc.ngrnotifyproto.model.ErrorCode
 
 import java.util.UUID
 
@@ -28,8 +27,7 @@ case class ActionCallback(
   trackerId: UUID,
   action: String,
   status: Int,
-  code: ErrorCode,
-  message: String
+  failures: Seq[ApiFailure]
 )
 
 object ActionCallback:
