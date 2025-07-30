@@ -42,7 +42,7 @@ import uk.gov.hmrc.http.{HeaderCarrier, HttpReads, HttpResponse, StringContextOp
 import uk.gov.hmrc.ngrnotifyproto.model.ErrorCode
 import uk.gov.hmrc.ngrnotifyproto.model.ErrorCode.*
 import uk.gov.hmrc.ngrnotifyproto.model.db.EmailNotification
-import uk.gov.hmrc.ngrnotifyproto.model.response.ActionCallback
+import uk.gov.hmrc.ngrnotifyproto.model.response.{ActionCallback, ApiFailure}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -60,9 +60,14 @@ class CallbackConnector @Inject() (
   def callbackOnFailure(notification: EmailNotification, error: Throwable): Future[Unit] =
     callbackOnFailure(notification, INTERNAL_SERVER_ERROR, ACTION_FAILED, error.getMessage)
 
-  def callbackOnFailure(notification: EmailNotification, status: Int, code: ErrorCode, message: String): Future[Unit] =
+  def callbackOnFailure(notification: EmailNotification, status: Int, code: ErrorCode, reason: String): Future[Unit] =
     val json = Json.toJsObject(
-      ActionCallback(notification.trackerId, notification.emailTemplateId.toString, status, code, message)
+      ActionCallback(
+        notification.trackerId,
+        notification.emailTemplateId.toString,
+        status,
+        Seq(ApiFailure(code, reason))
+      )
     )
 
     given HeaderCarrier = HeaderCarrier()
