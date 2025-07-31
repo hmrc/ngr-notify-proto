@@ -40,4 +40,32 @@ class HipConnector @Inject() (httpClient: HttpClientV2)(implicit ec: ExecutionCo
       .setHeader("OriginatorId" -> "NGR")
       .execute[JsValue]
   }
+
+  def callPersonDetails(clientId: String, clientSecret: String)(implicit headerCarrier: HeaderCarrier): Future[JsValue] = {
+    val hipPersonDetailsURL: URL = url"https://hip.ws.ibt.hmrc.gov.uk/voa-prototype/api/persondetails"
+    val authHeader: String    = AuthHeaderBuilder.buildAuthHeader(clientId, clientSecret)
+
+    httpClient
+      .get(hipPersonDetailsURL)
+      .setHeader(HeaderNames.AUTHORIZATION -> authHeader)
+      .setHeader(HeaderNames.ACCEPT -> "application/json")
+      .setHeader(HeaderNames.CONTENT_TYPE -> "application/json")
+      .setHeader("OriginatorId" -> "NGR")
+      .setHeader("CorrelationId" -> "f0bd1f32-de51-45cc-9b18-0520d6e3ab1a")
+      .execute[JsValue]
+  }
+
+  def callItems(clientId: String, clientSecret: String)(implicit headerCarrier: HeaderCarrier): Future[JsValue] = {
+    val hipItemsURL: URL = url"https://hip.ws.ibt.hmrc.gov.uk/voa-prototype/api/item"
+    val authHeader: String    = AuthHeaderBuilder.buildAuthHeader(clientId, clientSecret)
+
+    httpClient
+      .get(hipItemsURL)
+      .setHeader(HeaderNames.AUTHORIZATION -> authHeader)
+      .setHeader(HeaderNames.ACCEPT -> "application/json")
+      .setHeader(HeaderNames.CONTENT_TYPE -> "application/json")
+      .setHeader("OriginatorId" -> "NGR")
+      .setHeader("ItemNumber" -> "0")
+      .execute[JsValue]
+  }
 }
