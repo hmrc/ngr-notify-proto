@@ -1,0 +1,17 @@
+{
+  "id" : "one-two-three",
+  "name" : "Register Ratepayer",
+  "compartments" : {
+    "persons" : [ {
+      "idx" : "1.2.1",
+      "data" : {
+        "names" : {
+          "title_common" : "Mr"
+        },
+        "communications" : {
+          "email" : "somebody@example.com"
+        }
+      }
+    } ]
+  }
+}

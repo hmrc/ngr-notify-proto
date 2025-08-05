@@ -1,0 +1,1643 @@
+{
+  "$id": "https://ndreform.blob.core.windows.net/schemas/assurance-20250415-000-000-entity.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "",
+  "title": "JOB",
+  "description": "JSON schema for assuring that an instance of transported data about a JOB entity is fit for intended consumption",
+  "type": "object",
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "job": {
+      "$ref": "#/$defs/ENTITIES/JOBS/JOB/ENTITY"
+    }
+  },
+  "required": [
+    "$schema",
+    "job"
+  ],
+  "maxProperties": 2,
+  "$defs": {
+    "COMMON": {
+      "INSTANT": {
+        "type": "string",
+        "pattern": "^\\d{4}(0[1-9]|1[0-2])(0[1-9]|[12]\\d|3[01])T([01]\\d|2[0-3])([0-5]\\d)([0-5]\\d)Z$"
+      },
+      "ENUMERATION": {
+        "type": "object",
+        "properties": {
+          "description": {
+            "type": "string",
+            "maxLength": 63
+          }
+        },
+        "required": [
+          "code",
+          "meaning"
+        ],
+        "maxProperties": 2
+      },
+      "PROTODATA": {
+        "MIMES": {
+          "enum": [
+            "image/jpeg",
+            "image/png",
+            "image/pdf"
+          ]
+        },
+        "ITEMS": {
+          "type": "object",
+          "properties": {
+            "mime_type": {
+              "$ref": "#/$defs/COMMON/PROTODATA/MIMES"
+            },
+            "label": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 255
+            },
+            "is_pointer": {
+              "type": "boolean"
+            },
+            "pointer": {},
+            "data": {
+              "type": "string"
+            }
+          },
+          "if": {
+            "properties": {
+              "is_pointer": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "allOf": [
+              {
+                "properties": {
+                  "pointer": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "data": {
+                    "const": ""
+                  }
+                }
+              }
+            ]
+          },
+          "else": {
+            "allOf": [
+              {
+                "properties": {
+                  "data": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 2147483640
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "pointer": {
+                    "const": ""
+                  }
+                }
+              }
+            ]
+          },
+          "required": [
+            "mime_type",
+            "label",
+            "is_pointer",
+            "pointer",
+            "data"
+          ],
+          "maxProperties": 5
+        }
+      }
+    },
+    "FOREIGN": {
+      "type": "object",
+      "properties": {
+        "foreign_ids": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "system": {
+                "oneOf": [
+                  {
+                    "const": null
+                  },
+                  {
+                    "enum": [
+                      "Government_Gateway",
+                      "Billing_Authority",
+                      "Companies_House"
+                    ]
+                  }
+                ]
+              },
+              "location": {
+                "oneOf": [
+                  {
+                    "const": null
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  }
+                ]
+              },
+              "value": {
+                "oneOf": [
+                  {
+                    "const": null
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 127
+                  }
+                ]
+              }
+            },
+            "required": [
+              "system",
+              "location",
+              "value"
+            ]
+          }
+        },
+        "foreign_labels": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "system": {
+                "oneOf": [
+                  {
+                    "const": null
+                  },
+                  {
+                    "enum": [
+                      "Government_Gateway",
+                      "Billing_Authority",
+                      "Companies_House"
+                    ]
+                  }
+                ]
+              },
+              "location": {
+                "oneOf": [
+                  {
+                    "const": null
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  }
+                ]
+              },
+              "value": {
+                "oneOf": [
+                  {
+                    "const": null
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  }
+                ]
+              }
+            },
+            "required": [
+              "system",
+              "location",
+              "value"
+            ]
+          }
+        },
+        "foreign_names": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "system": {
+                "oneOf": [
+                  {
+                    "const": null
+                  },
+                  {
+                    "enum": [
+                      "Government_Gateway",
+                      "Billing_Authority",
+                      "Companies_House"
+                    ]
+                  }
+                ]
+              },
+              "location": {
+                "oneOf": [
+                  {
+                    "const": null
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  }
+                ]
+              },
+              "value": {
+                "oneOf": [
+                  {
+                    "const": null
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 255
+                  }
+                ]
+              }
+            },
+            "required": [
+              "system",
+              "location",
+              "value"
+            ]
+          }
+        }
+      },
+      "required": [
+        "foreign_ids",
+        "foreign_labels",
+        "foreign_names"
+      ]
+    },
+    "TAXONOMY": {
+      "CAT_LTX-DOM": {
+        "enum": [
+          "LTX-DOM-JOB",
+          "LTX-DOM-PSN",
+          "LTX-DOM-PSA"
+        ]
+      },
+      "CAT_LTX-DOM-JOB_LOG": {
+        "if": {
+          "properties": {
+            "category": {
+              "properties": {
+                "code": {
+                  "const": "LTX-DOM-JOB"
+                }
+              }
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "type": {
+              "properties": {
+                "code": {
+                  "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-JOB_TYP"
+                }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "properties": {
+                      "code": {
+                        "const": "INF"
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "class": {
+                    "properties": {
+                      "code": {
+                        "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-JOB_TYP_INF_CLS"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "properties": {
+                      "code": {
+                        "const": "RVL"
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "class": {
+                    "properties": {
+                      "code": {
+                        "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-JOB_TYP_RVL_CLS"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "properties": {
+                      "code": {
+                        "const": "MTN"
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "class": {
+                    "properties": {
+                      "code": {
+                        "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-JOB_TYP_MTN_CLS"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "properties": {
+                      "code": {
+                        "const": "SMT"
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "class": {
+                    "properties": {
+                      "code": {
+                        "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-JOB_TYP_SMT_CLS"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "CAT_LTX-DOM-JOB_TYP": {
+        "enum": [
+          "INF",
+          "RVL",
+          "MTN",
+          "SMT"
+        ]
+      },
+      "CAT_LTX-DOM-JOB_TYP_INF_CLS": {
+        "enum": [
+          "RPN",
+          "RRP",
+          "LPN",
+          "LPP",
+          "RPT"
+        ]
+      },
+      "CAT_LTX-DOM-JOB_TYP_RVL_CLS": {
+        "enum": [
+          "TBD"
+        ]
+      },
+      "CAT_LTX-DOM-JOB_TYP_MTN_CLS": {
+        "enum": [
+          "RLE"
+        ]
+      },
+      "CAT_LTX-DOM-JOB_TYP_SMT_CLS": {
+        "enum": [
+          "TBD"
+        ]
+      },
+      "CAT_LTX-DOM-PSN_LOG": {
+        "if": {
+          "properties": {
+            "category": {
+              "properties": {
+                "code": {
+                  "const": "LTX-DOM-PSN"
+                }
+              }
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "type": {
+              "properties": {
+                "code": {
+                  "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-PSN_TYP"
+                }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "properties": {
+                      "code": {
+                        "const": "NAT"
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "class": {
+                    "properties": {
+                      "code": {
+                        "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-PSN_TYP_NAT_CLS"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "properties": {
+                      "code": {
+                        "const": "COR"
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "class": {
+                    "properties": {
+                      "code": {
+                        "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-PSN_TYP_COR_CLS"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "properties": {
+                      "code": {
+                        "const": "CWN"
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "class": {
+                    "properties": {
+                      "code": {
+                        "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-PSN_TYP_CWN_CLS"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "CAT_LTX-DOM-PSN_TYP": {
+        "enum": [
+          "NAT",
+          "COR",
+          "CWN"
+        ]
+      },
+      "CAT_LTX-DOM-PSN_TYP_NAT_CLS": {
+        "enum": [
+          "GGY",
+          "UNH",
+          "CON",
+          "UCN"
+        ]
+      },
+      "CAT_LTX-DOM-PSN_TYP_COR_CLS": {
+        "enum": [
+          "GGY",
+          "REG",
+          "STA",
+          "CHT"
+        ]
+      },
+      "CAT_LTX-DOM-PSN_TYP_CWN_CLS": {
+        "enum": [
+          "MON",
+          "MIN",
+          "SOS",
+          "CEC"
+        ]
+      },
+      "CAT_LTX-DOM-PSA_LOG": {
+        "if": {
+          "properties": {
+            "category": {
+              "properties": {
+                "code": {
+                  "const": "LTX-DOM-PSA"
+                }
+              }
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "type": {
+              "properties": {
+                "code": {
+                  "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-PSA_TYP"
+                }
+              }
+            }
+          },
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "properties": {
+                      "code": {
+                        "const": "COL"
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "class": {
+                    "properties": {
+                      "code": {
+                        "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-PSA_TYP_COL_CLS"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "properties": {
+                      "code": {
+                        "const": "OFF"
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "class": {
+                    "properties": {
+                      "code": {
+                        "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-PSA_TYP_OFF_CLS"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "properties": {
+                      "code": {
+                        "const": "ATH"
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "class": {
+                    "properties": {
+                      "code": {
+                        "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-PSA_TYP_ATH_CLS"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "properties": {
+                      "code": {
+                        "const": "TXP"
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "class": {
+                    "properties": {
+                      "code": {
+                        "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-PSA_TYP_TXP_CLS"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "properties": {
+                      "code": {
+                        "const": "REP"
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "class": {
+                    "properties": {
+                      "code": {
+                        "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-PSA_TYP_REP_CLS"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "type": {
+                    "properties": {
+                      "code": {
+                        "const": "REC"
+                      }
+                    }
+                  }
+                }
+              },
+              "then": {
+                "properties": {
+                  "class": {
+                    "properties": {
+                      "code": {
+                        "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-PSA_TYP_REC_CLS"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      },
+      "CAT_LTX-DOM-PSA_TYP": {
+        "enum": [
+          "COL",
+          "OFF",
+          "ATH",
+          "TXP",
+          "REP",
+          "REC"
+        ]
+      },
+      "CAT_LTX-DOM-PSA_TYP_COL_CLS": {
+        "enum": [
+          "AOC",
+          "POC",
+          "DOC",
+          "DOW",
+          "POW"
+        ]
+      },
+      "CAT_LTX-DOM-PSA_TYP_OFF_CLS": {
+        "enum": [
+          "LOV",
+          "CVO",
+          "LLO"
+        ]
+      },
+      "CAT_LTX-DOM-PSA_TYP_ATH_CLS": {
+        "enum": [
+          "NBA",
+          "CBA",
+          "ANA"
+        ]
+      },
+      "CAT_LTX-DOM-PSA_TYP_TXP_CLS": {
+        "enum": [
+          "RPO",
+          "RPW",
+          "CTP",
+          "CTX"
+        ]
+      },
+      "CAT_LTX-DOM-PSA_TYP_REP_CLS": {
+        "enum": [
+          "COM",
+          "ATY",
+          "PRP",
+          "TST",
+          "VIC",
+          "ACP"
+        ]
+      },
+      "CAT_LTX-DOM-PSA_TYP_REC_CLS": {
+        "enum": [
+          "ADM",
+          "LPA",
+          "CRT"
+        ]
+      }
+    },
+    "ENTITIES": {
+      "STANDARD": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$comment": "",
+        "title": "STANDARD",
+        "description": "JSON schema for assuring that transported data about a STANDARD is fit for intended consumption",
+        "type": "object",
+        "properties": {
+          "id": {
+            "oneOf": [
+              {
+                "const": null
+              },
+              {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 99999999
+              },
+              {
+                "type": "string",
+                "minLength": 36,
+                "maxLength": 36
+              }
+            ]
+          },
+          "idx": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 31
+          },
+          "name": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 255
+          },
+          "label": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 255
+          },
+          "description": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 2047
+          },
+          "origination": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/COMMON/INSTANT"
+              },
+              {
+                "const": null
+              }
+            ]
+          },
+          "termination": {
+            "oneOf": [
+              {
+                "$ref": "#/$defs/COMMON/INSTANT"
+              },
+              {
+                "const": null
+              }
+            ]
+          },
+          "protodata": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/COMMON/PROTODATA/ITEMS"
+            }
+          },
+          "metadata": {
+            "type": "object",
+            "properties": {
+              "sending": {
+                "type": "object",
+                "properties": {
+                  "extracting": {
+                    "type": "object",
+                    "properties": {
+                      "selecting": {}
+                    },
+                    "required": [
+                      "selecting"
+                    ],
+                    "maxProperties": 1
+                  },
+                  "transforming": {
+                    "type": "object",
+                    "properties": {
+                      "filtering": {},
+                      "supplementing": {},
+                      "recontextualising": {}
+                    },
+                    "required": [
+                      "filtering",
+                      "supplementing",
+                      "recontextualising"
+                    ],
+                    "maxProperties": 3
+                  },
+                  "loading": {
+                    "type": "object",
+                    "properties": {
+                      "readying": {},
+                      "assuring": {},
+                      "signing": {},
+                      "encrypting": {},
+                      "sending": {}
+                    },
+                    "required": [
+                      "readying",
+                      "assuring",
+                      "signing",
+                      "encrypting",
+                      "sending"
+                    ],
+                    "maxProperties": 5
+                  }
+                },
+                "required": [
+                  "extracting",
+                  "transforming",
+                  "loading"
+                ],
+                "maxProperties": 3
+              },
+              "receiving": {
+                "type": "object",
+                "properties": {
+                  "unloading": {
+                    "type": "object",
+                    "properties": {
+                      "receiving": {},
+                      "decrypting": {},
+                      "verifying": {},
+                      "assuring": {},
+                      "readying": {}
+                    },
+                    "required": [
+                      "receiving",
+                      "decrypting",
+                      "verifying",
+                      "assuring",
+                      "readying"
+                    ],
+                    "maxProperties": 5
+                  },
+                  "transforming": {
+                    "type": "object",
+                    "properties": {
+                      "recontextualising": {},
+                      "dropping": {},
+                      "restoring": {}
+                    },
+                    "required": [
+                      "recontextualising",
+                      "dropping",
+                      "restoring"
+                    ],
+                    "maxProperties": 3
+                  },
+                  "storing": {
+                    "type": "object",
+                    "properties": {
+                      "inserting": {}
+                    },
+                    "required": [
+                      "inserting"
+                    ],
+                    "maxProperties": 1
+                  }
+                },
+                "required": [
+                  "unloading",
+                  "transforming",
+                  "storing"
+                ],
+                "maxProperties": 3
+              }
+            },
+            "required": [
+              "sending",
+              "receiving"
+            ],
+            "maxProperties": 2
+          }
+        },
+        "required": [
+          "id",
+          "idx",
+          "name",
+          "label",
+          "description",
+          "origination",
+          "termination",
+          "protodata",
+          "metadata"
+        ]
+      },
+      "JOBS": {
+        "JOB": {
+          "ENTITY": {
+            "title": "JOB",
+            "description": "JSON schema for assuring that transported data about a JOB is fit for intended consumption",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/$defs/ENTITIES/STANDARD"
+              },
+              {
+                "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-JOB_LOG"
+              }
+            ],
+            "properties": {
+              "category": {
+                "$ref": "#/$defs/COMMON/ENUMERATION",
+                "properties": {
+                  "code": {
+                    "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM"
+                  }
+                }
+              },
+              "type": {
+                "$ref": "#/$defs/COMMON/ENUMERATION",
+                "properties": {
+                  "code": {}
+                }
+              },
+              "class": {
+                "$ref": "#/$defs/COMMON/ENUMERATION",
+                "properties": {
+                  "code": {}
+                }
+              },
+              "data": {
+                "$ref": "#/$defs/ENTITIES/JOBS/JOB/DATA"
+              },
+              "compartments": {
+                "type": "object",
+                "properties": {
+                  "properties": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "persons": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/ENTITIES/PERSONS/PERSON/ENTITY"
+                    }
+                  },
+                  "processes": {
+                    "type": "array",
+                    "items": {}
+                  },
+                  "products": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/ENTITIES/PRODUCTS/PERSONS"
+                    }
+                  },
+                  "relationships": {
+                    "type": "array",
+                    "items": {}
+                  }
+                },
+                "required": [
+                  "properties",
+                  "persons",
+                  "processes",
+                  "products",
+                  "relationships"
+                ],
+                "maxProperties": 5
+              },
+              "items": {
+                "type": "array",
+                "maxItems": 0,
+                "items": {}
+              }
+            },
+            "required": [
+              "category",
+              "type",
+              "class",
+              "data",
+              "compartments",
+              "items"
+            ],
+            "maxProperties": 15
+          },
+          "DATA": {
+            "type": "object",
+            "$ref": "#/$defs/FOREIGN",
+            "maxProperties": 3
+          }
+        }
+      },
+      "PERSONS": {
+        "PERSON": {
+          "ENTITY": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$comment": "",
+            "title": "PERSON",
+            "description": "JSON schema for assuring that transported data about a PERSON is fit for intended consumption",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/$defs/ENTITIES/STANDARD"
+              },
+              {
+                "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-PSN_LOG"
+              }
+            ],
+            "properties": {
+              "category": {
+                "$ref": "#/$defs/COMMON/ENUMERATION",
+                "properties": {
+                  "code": {
+                    "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM"
+                  }
+                }
+              },
+              "type": {
+                "$ref": "#/$defs/COMMON/ENUMERATION",
+                "properties": {
+                  "code": {}
+                }
+              },
+              "class": {
+                "$ref": "#/$defs/COMMON/ENUMERATION",
+                "properties": {
+                  "code": {}
+                }
+              },
+              "data": {
+                "$ref": "#/$defs/ENTITIES/PERSONS/PERSON/DATA"
+              },
+              "compartments": {},
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/ENTITIES/PERSONS/PERSONA/ENTITY"
+                }
+              }
+            },
+            "required": [
+              "category",
+              "type",
+              "class",
+              "data",
+              "compartments",
+              "items"
+            ],
+            "maxProperties": 15
+          },
+          "DATA": {
+            "type": "object",
+            "$ref": "#/$defs/FOREIGN",
+            "properties": {
+              "names": {
+                "type": "object",
+                "properties": {
+                  "title_common": {
+                    "$comment": "Generally accepted prefixes denoting marital status.",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "enum": [
+                          "Mr",
+                          "Ms",
+                          "Mrs",
+                          "Miss"
+                        ]
+                      }
+                    ]
+                  },
+                  "title_uncommon": {
+                    "$comment": "All other prefixes avered by person concerned. (https://www.gov.uk/government/publications/titles-included-in-passports/titles-accessible)",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "forenames": {
+                    "$comment": "Registered name and/or given name plus any middle names (if any).",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "surname": {
+                    "$comment": "Registered surname.",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "post_nominals": {
+                    "$comment": "Any characters dentoting state hounors, professional titles or professional qualifications to be shown after surname.",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "corporate_name": {
+                    "$comment": "The proclaimed name of a legally registered, statutorily constituted or royally chartered body corporate.",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "crown_name": {
+                    "$comment": "The pronounced name of a royally appointed, commisioned or otherwise devised state office or officer. Including the monarch, government, judicial or armed forces role.",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "known_as": {
+                    "$comment": "Any accepted abbreviation, conflation, representation of or alternative to the authorative naming feilds; Including in the case of legally recognosed partners, the legally proclaimed firm name; And in the case of a company any trading name.",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "title_common",
+                  "title_uncommon",
+                  "forenames",
+                  "surname",
+                  "post_nominals",
+                  "corporate_name",
+                  "crown_name",
+                  "known_as"
+                ],
+                "maxProperties": 8
+              },
+              "communications": {
+                "type": "object",
+                "properties": {
+                  "postal_address": {
+                    "$comment": "",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "telephone_number": {
+                    "$comment": "",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "email": {
+                    "$comment": "",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "postal_address",
+                  "telephone_number",
+                  "email"
+                ],
+                "maxProperties": 3
+              }
+            },
+            "required": [
+              "names",
+              "communications"
+            ],
+            "maxProperties": 5
+          }
+        },
+        "PERSONA": {
+          "ENTITY": {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$comment": "",
+            "title": "PERSON",
+            "description": "JSON schema for assuring that transported data about a PERSON is fit for intended consumption",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/$defs/ENTITIES/STANDARD"
+              },
+              {
+                "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM-PSA_LOG"
+              }
+            ],
+            "properties": {
+              "category": {
+                "$ref": "#/$defs/COMMON/ENUMERATION",
+                "properties": {
+                  "code": {
+                    "$ref": "#/$defs/TAXONOMY/CAT_LTX-DOM"
+                  }
+                }
+              },
+              "type": {
+                "$ref": "#/$defs/COMMON/ENUMERATION",
+                "properties": {
+                  "code": {}
+                }
+              },
+              "class": {
+                "$ref": "#/$defs/COMMON/ENUMERATION",
+                "properties": {
+                  "code": {}
+                }
+              },
+              "data": {
+                "$ref": "#/$defs/ENTITIES/PERSONS/PERSONA/DATA"
+              },
+              "compartments": {},
+              "items": {
+                "type": "array",
+                "maxItems": 0,
+                "items": {}
+              }
+            },
+            "required": [
+              "category",
+              "type",
+              "class",
+              "data",
+              "compartments",
+              "items"
+            ],
+            "maxProperties": 15
+          },
+          "DATA": {
+            "type": "object",
+            "$ref": "#/$defs/FOREIGN",
+            "properties": {
+              "names": {
+                "type": "object",
+                "properties": {
+                  "title_common": {
+                    "$comment": "Generally accepted prefixes denoting marital status.",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "enum": [
+                          "Mr",
+                          "Ms",
+                          "Mrs",
+                          "Miss"
+                        ]
+                      }
+                    ]
+                  },
+                  "title_uncommon": {
+                    "$comment": "All other prefixes avered by person concerned. (https://www.gov.uk/government/publications/titles-included-in-passports/titles-accessible)",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "forenames": {
+                    "$comment": "Registered name and/or given name plus any middle names (if any).",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "surname": {
+                    "$comment": "Registered surname.",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "post_nominals": {
+                    "$comment": "Any characters dentoting state hounors, professional titles or professional qualifications to be shown after surname.",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "corporate_name": {
+                    "$comment": "The proclaimed name of a legally registered, statutorily constituted or royally chartered body corporate.",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "crown_name": {
+                    "$comment": "The pronounced name of a royally appointed, commisioned or otherwise devised state office or officer. Including the monarch, government, judicial or armed forces role.",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "known_as": {
+                    "$comment": "Any accepted abbreviation, conflation, representation of or alternative to the authorative naming feilds; Including in the case of legally recognosed partners, the legally proclaimed firm name; And in the case of a company any trading name.",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "title_common",
+                  "title_uncommon",
+                  "forenames",
+                  "surname",
+                  "post_nominals",
+                  "corporate_name",
+                  "crown_name",
+                  "known_as"
+                ],
+                "maxProperties": 8
+              },
+              "communications": {
+                "type": "object",
+                "properties": {
+                  "postal_address": {
+                    "$comment": "",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "telephone_number": {
+                    "$comment": "",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  },
+                  "email": {
+                    "$comment": "",
+                    "description": "",
+                    "examples": [],
+                    "oneOf": [
+                      {
+                        "const": null
+                      },
+                      {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "postal_address",
+                  "telephone_number",
+                  "email"
+                ],
+                "maxProperties": 3
+              }
+            },
+            "required": [
+              "names",
+              "communications"
+            ],
+            "maxProperties": 5
+          }
+        }
+      },
+      "PRODUCTS": {
+        "PERSONS": {
+          "$ref": "#/$defs/ENTITIES/PERSONS/PERSON/ENTITY"
+        }
+      }
+    }
+  }
+}
